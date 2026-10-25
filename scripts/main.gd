@@ -221,11 +221,15 @@ func _process(_delta: float) -> void:
 	if _generation_epoch != _request_epoch:
 		_update_status("")
 		return
-	if result.status == "success" and session.install_procedural(result.recipe):
-		_display_current()
-		_save_game()
-	else:
+	if result.status != "success":
 		_generation_message = "No se pudo generar un tablero. Inténtalo de nuevo."
+		_update_status("")
+	elif session.install_procedural_and_save(result.recipe):
+		save_failed = false
+		_display_current()
+	else:
+		# No new playable state was published; do not retry the rejected board on pause.
+		_generation_message = "No se pudo guardar el nuevo tablero. Se conserva tu partida. Inténtalo de nuevo."
 		_update_status("")
 
 func _exit_tree() -> void:

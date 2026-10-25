@@ -61,6 +61,27 @@ func install_procedural(value: Dictionary) -> bool:
 	current_index = catalog.size() - 1
 	return true
 
+func install_procedural_and_save(value: Dictionary) -> bool:
+	# Stage the replacement without mutating the live session or its UI/history.
+	var staged := HashiSession.new(base_catalog, store.path)
+	staged.catalog = catalog.duplicate(true)
+	staged.procedural = procedural.duplicate(true)
+	staged.boards = boards.duplicate(true)
+	staged.completed_ids = completed_ids.duplicate()
+	staged.current_index = current_index
+	if not staged.install_procedural(value):
+		store.last_error = "No se pudo validar el nuevo tablero."
+		return false
+	# The store atomically replaces the file. Publish live state only after success.
+	if not store.save_game(staged.snapshot_data(), base_catalog):
+		return false
+	catalog = staged.catalog
+	procedural = staged.procedural
+	boards = staged.boards
+	completed_ids = staged.completed_ids
+	current_index = staged.current_index
+	return true
+
 func current_puzzle() -> Puzzle:
 	var puzzle := Puzzle.new(catalog[current_index])
 	puzzle.bridges = boards.get(puzzle.puzzle_id, {}).duplicate(true)
