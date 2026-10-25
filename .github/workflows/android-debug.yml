@@ -38,6 +38,9 @@ jobs:
           ./tools/ci/install-godot.sh
           echo "$PWD/.local/android-ci/bin" >> "$GITHUB_PATH"
       - name: Test, export and statically verify APK
+        env:
+          HASHI_SIGNING_KEYSTORE_BASE64: ${{ secrets.HASHI_SIGNING_KEYSTORE_BASE64 }}
+          HASHI_SIGNING_PASSWORD: ${{ secrets.HASHI_SIGNING_PASSWORD }}
         run: ./tools/ci/export-android.sh
       - name: Upload debug APK and verification
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
