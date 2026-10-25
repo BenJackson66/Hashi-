@@ -118,7 +118,7 @@ func test_storage() -> void:
 	write_text(store.path + ".tmp", "{broken")
 	check(store.load_game(catalog) == data, "interrupted temp ignored")
 	var bad: Array = []
-	for version in [2, 1.5, true, "1"]:
+	for version in [Store.VERSION + 1, 1.5, true, "1"]:
 		var item := data.duplicate(true)
 		item.version = version
 		bad.append(item)

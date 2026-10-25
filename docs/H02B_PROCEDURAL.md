@@ -1,5 +1,7 @@
 # H02-B — Generación y verificación de unicidad
 
+La integración posterior de esta lógica en el juego se documenta en [H02-C](H02C_PLAYABLE.md). Las referencias a integración pendiente de este documento describen el alcance original de H02-B.
+
 Base: `main` (`98fc112`), Godot **4.6.3**. Algoritmo de generación: **`h02b-1`**. Esta entrega añade lógica y herramientas de desarrollo; no conecta tableros generados a la interfaz, los controles Android, la secuencia de juego ni el guardado. Los tres tableros existentes, las reglas y la firma permanente permanecen intactos. No implementa H02-C.
 
 ## Arquitectura
