@@ -13,3 +13,6 @@ godot --headless --path . --script tests/run.gd
 godot --headless --path . --script tests/continuity.gd
 godot --headless --path . --script tests/relaunch.gd -- --write
 godot --headless --path . --script tests/relaunch.gd -- --read
+timeout 30s godot --headless --path . --script tests/procedural.gd
+timeout 30s godot --headless --path . --script tests/procedural_identity.gd
+python3 tests/signing_security.py

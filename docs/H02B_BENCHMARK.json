@@ -1,0 +1,191 @@
+{
+  "note": "Cloud CPU measurements, not Android device performance. Timing fields are not part of reproducibility.",
+  "batches": [
+    {
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 5,
+          "island_count": 10,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 5
+        },
+        "type": "environment"
+      },
+      "summary": {
+        "count": 100,
+        "failures": 0,
+        "max_ms": 8.929,
+        "mean_ms": 2.95498,
+        "median_ms": 2.1345,
+        "p95_ms": 7.021,
+        "successes": 100,
+        "type": "summary"
+      },
+      "independent_process_reproducibility": {
+        "compared": 100,
+        "identical": 100
+      },
+      "examples": [
+        {
+          "seed": 1,
+          "dimensions": [
+            5,
+            5
+          ],
+          "island_count": 10,
+          "attempts": 1,
+          "islands_sha256": "45a74e099c3a4e3064efd1893c41d3442d3b7106812b1853b17cac15bd0cbab0",
+          "metrics": {
+            "assumptions": 0,
+            "backtracks": 0,
+            "double_bridge_ratio": 0.7,
+            "forced_decisions": 10,
+            "islands": 10,
+            "max_depth": 0,
+            "possible_connections": 10,
+            "search_nodes": 1,
+            "used_assumptions": false,
+            "used_backtracking": false
+          }
+        },
+        {
+          "seed": 38,
+          "dimensions": [
+            5,
+            5
+          ],
+          "island_count": 10,
+          "attempts": 1,
+          "islands_sha256": "d3067060aa2cc0afb6a55adb50eaec6bb7bd135bd6c17402b4c8ab628c70e30a",
+          "metrics": {
+            "assumptions": 4,
+            "backtracks": 2,
+            "double_bridge_ratio": 0.333333333333333,
+            "forced_decisions": 18,
+            "islands": 10,
+            "max_depth": 2,
+            "possible_connections": 11,
+            "search_nodes": 5,
+            "used_assumptions": true,
+            "used_backtracking": true
+          }
+        },
+        {
+          "seed": 42,
+          "dimensions": [
+            5,
+            5
+          ],
+          "island_count": 10,
+          "attempts": 4,
+          "islands_sha256": "5373b187791245ed93bc0d5d93f6bf5fd143413c6cd08bd1d2c76e67acb59aff",
+          "metrics": {
+            "assumptions": 0,
+            "backtracks": 0,
+            "double_bridge_ratio": 0.555555555555556,
+            "forced_decisions": 10,
+            "islands": 10,
+            "max_depth": 0,
+            "possible_connections": 10,
+            "search_nodes": 1,
+            "used_assumptions": false,
+            "used_backtracking": false
+          }
+        }
+      ]
+    },
+    {
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 8,
+          "island_count": 24,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 8
+        },
+        "type": "environment"
+      },
+      "summary": {
+        "count": 50,
+        "failures": 0,
+        "max_ms": 232.299,
+        "mean_ms": 54.59302,
+        "median_ms": 33.8475,
+        "p95_ms": 195.207,
+        "successes": 50,
+        "type": "summary"
+      },
+      "independent_process_reproducibility": {
+        "compared": 50,
+        "identical": 50
+      },
+      "examples": [
+        {
+          "seed": 50,
+          "dimensions": [
+            8,
+            8
+          ],
+          "island_count": 24,
+          "attempts": 4,
+          "islands_sha256": "dd803e59a1b86a7c8fba35b829257b118c69f6167c5ba019bcd58cb8e229ad0c",
+          "metrics": {
+            "assumptions": 13,
+            "backtracks": 9,
+            "double_bridge_ratio": 0.346153846153846,
+            "forced_decisions": 93,
+            "islands": 24,
+            "max_depth": 4,
+            "possible_connections": 33,
+            "search_nodes": 14,
+            "used_assumptions": true,
+            "used_backtracking": true
+          }
+        }
+      ]
+    }
+  ],
+  "identity_review_validation": {
+    "identity_schema": 1,
+    "algorithm_version": "h02b-1",
+    "baseline_commit": "d2485237f25a2cf7d82a7680ca343fef61a6de23",
+    "batches": [
+      {
+        "dimensions": [
+          5,
+          5
+        ],
+        "island_count": 10,
+        "seeds": [
+          1,
+          100
+        ],
+        "compared": 100,
+        "identical_except_puzzle_id_and_elapsed_times": 100
+      },
+      {
+        "dimensions": [
+          8,
+          8
+        ],
+        "island_count": 24,
+        "seeds": [
+          1,
+          50
+        ],
+        "compared": 50,
+        "identical_except_puzzle_id_and_elapsed_times": 50
+      }
+    ],
+    "identity_golden_seed_42": "procedural-id1-h02b-1-9ee1b9751911fc0d573e5aeaf302ca14761da348383407495e46210a0788f362"
+  }
+}
