@@ -10,17 +10,18 @@ export XDG_CACHE_HOME="$ci_dir/cache"
 mkdir -p "$XDG_CONFIG_HOME/godot" "$XDG_CACHE_HOME" build/android
 [[ "$(godot --version)" == 4.6.3.stable.* ]]
 [[ -f "$XDG_DATA_HOME/godot/export_templates/4.6.3.stable/android_debug.apk" ]]
-# Ephemeral debug identity. Never commit/upload its key, password or editor data.
+# Persistent signing identity supplied by GitHub Actions secrets.
+# Never generate a new identity silently: it would break Android updates.
+: "${HASHI_SIGNING_KEYSTORE_BASE64:?Missing persistent signing keystore secret}"
+: "${HASHI_SIGNING_PASSWORD:?Missing persistent signing password secret}"
 export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$ci_dir/debug.keystore"
 export GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey
-export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD
-GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="$(openssl rand -hex 24)"
+export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="$HASHI_SIGNING_PASSWORD"
+umask 077
+printf '%s' "$HASHI_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH"
 trap 'rm -f "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH" "$XDG_DATA_HOME/godot/keystores/debug.keystore"' EXIT
-rm -f "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH"
-"$JAVA_HOME/bin/keytool" -genkeypair -noprompt -keystore "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH" \
-  -storetype PKCS12 -storepass:env GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD \
-  -keypass:env GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD -alias "$GODOT_ANDROID_KEYSTORE_DEBUG_USER" \
-  -keyalg RSA -keysize 2048 -validity 365 -dname 'CN=Hashi Debug,O=Hashi Development,C=US'
+"$JAVA_HOME/bin/keytool" -list -keystore "$GODOT_ANDROID_KEYSTORE_DEBUG_PATH" \
+  -storepass:env GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD -alias "$GODOT_ANDROID_KEYSTORE_DEBUG_USER" > /dev/null
 # This directory belongs to CI, not to the developer's editor profile.
 python3 - <<'PY'
 import json, os
