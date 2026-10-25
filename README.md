@@ -41,4 +41,8 @@ Instala las **plantillas de exportación de la misma versión exacta de Godot** 
 - **Android:** configura JDK 17 y Android SDK según la documentación oficial de tu versión de Godot, las rutas en ajustes del editor y una clave de depuración para exportaciones de prueba. El preset usa ARM64 y orientación vertical; no requiere Internet. Configura firma propia para distribución y no subas claves al repositorio. Prueba gestos, recortes/safe areas y legibilidad en un dispositivo real antes de publicar.
 - **Web:** preset Compatibility sin hilos; incluye explícitamente `data/*.json`. Crea `build/web` y ejecuta `./tools/dev.sh --headless --export-debug Web build/web/index.html`. Sirve los archivos mediante HTTP(S), no mediante `file://`.
 
-La configuración de exportación es un punto de partida. No se han validado compilación APK, ejecución Android ni exportación/navegador web en este entorno. No se necesitan esos SDK para desarrollar y probar las reglas en escritorio.
+En H01 la exportación quedó como configuración inicial. Para el estado de compilación APK de H01-B consulta [la guía Android Debug](docs/ANDROID_DEBUG.md). La ejecución en un dispositivo Android y la exportación/navegador web siguen sin validar. No se necesitan esos SDK para desarrollar y probar las reglas en escritorio.
+
+## APK debug automático (H01-B)
+
+Consulta [la guía Android Debug](docs/ANDROID_DEBUG.md) para ejecutar el workflow manual, descargar el APK desde un teléfono y conocer los bloqueos de habilitación de GitHub Actions. El workflow usa Godot 4.6.3, ARM64 y firma efímera de depuración; no publica una versión comercial.
