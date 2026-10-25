@@ -45,10 +45,14 @@ En H01 la exportación quedó como configuración inicial. Para el estado de com
 
 ## APK debug automático (H01-B)
 
-Consulta [la guía Android Debug](docs/ANDROID_DEBUG.md) para ejecutar el workflow manual, descargar el APK desde un teléfono y conocer los bloqueos de habilitación de GitHub Actions. El workflow usa Godot 4.6.3, ARM64 y firma efímera de depuración; no publica una versión comercial.
+Consulta [la guía Android Debug](docs/ANDROID_DEBUG.md) para ejecutar el workflow manual, descargar el APK desde un teléfono y conocer los bloqueos de habilitación de GitHub Actions. El workflow usa Godot 4.6.3, ARM64 y firma persistente de depuración configurada mediante secretos de Actions; no publica una versión comercial.
 
 ## Continuidad (H02-A)
 
 **Deshacer** y **Rehacer** recorren cambios de puentes y reinicios. Un cambio nuevo descarta el futuro de rehacer; los gestos rechazados no lo descartan. Al resolver aparece **Siguiente** habilitado. Tras el tercer tablero, **Volver al primero** cierra la secuencia provisional conservando las partidas. La marca ✓ indica que un tablero se completó alguna vez. No es un sistema de progresión definitivo.
 
 El autoguardado ocurre tras cada cambio y reintenta una escritura fallida al pausar/cerrar. Al volver se recupera la partida; el historial de deshacer se reinicia al cambiar de tablero o relanzar. Véase [la guía H02-A](docs/H02A_CONTINUITY.md) para probarlo en Android.
+
+## Firma persistente (PR #3)
+
+Antes de compilar con esta configuración, el propietario debe preparar una única clave, respaldarla privadamente y configurar los dos secretos de Actions. Ver [el procedimiento de firma Android](docs/ANDROID_SIGNING.md). CI no genera claves alternativas y comprueba que el certificado del APK corresponda a la identidad suministrada.
