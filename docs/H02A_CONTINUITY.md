@@ -60,7 +60,7 @@ No se ha inspeccionado visualmente la UI ni se ha probado en un dispositivo Andr
 
 1. En GitHub, Actions → **Android Debug APK** → Run workflow, selecciona **feature/h02a-continuidad**. La condición de esta rama permite construir H02-A; `main` conserva su configuración hasta revisar y fusionar el PR por separado.
 2. Descarga el artefacto `hashi-h01-debug-arm64-<número>` de una ejecución correcta y extrae `hashi-h01-debug-arm64.apk`. Se mantienen los nombres de H01-B por compatibilidad del workflow. Ver también [la guía de descarga desde el teléfono](ANDROID_DEBUG.md#descargar-con-un-teléfono-android).
-3. Instálalo en un teléfono ARM64 con Android 7.0 o posterior. Las firmas debug son efímeras: si debes desinstalar una versión anterior para resolver un conflicto de firma, sus datos se borrarán; esto no sirve como prueba de continuidad entre versiones.
+3. Instálalo en un teléfono ARM64 con Android 7.0 o posterior. El PR de [firma persistente](ANDROID_SIGNING.md) prepara actualizaciones sin cambiar de certificado. Si debes desinstalar un APK antiguo con firma efímera, sus datos se borrarán; eso no sirve como prueba de continuidad entre versiones.
 4. Coloca varios puentes; prueba Deshacer/Rehacer sucesivos, deshaz y haz un cambio nuevo para comprobar que Rehacer se deshabilita. Intenta un gesto inválido y verifica que no añade historial.
 5. Reinicia y deshaz el reinicio. Resuelve un nivel, deshaz para retirar la victoria y rehace para recuperarla. Pulsa Siguiente; completa la secuencia y comprueba Volver al primero.
 6. Deja el segundo o tercer tablero a medias. Sal a Inicio, cierra/quita la app de recientes y vuelve a abrirla **sin desinstalar ni borrar datos**. Deben conservarse nivel, puentes y marcas ✓. Repite tras deshacer y tras reiniciar.

@@ -1,5 +1,7 @@
 # H01-B — APK Android de depuración en GitHub Actions
 
+**Actualización del PR #3:** esta rama requiere firma persistente mediante dos secretos. Sigue [ANDROID_SIGNING.md](ANDROID_SIGNING.md) antes de ejecutar el workflow; las exportaciones efímeras registradas más abajo son resultados históricos.
+
 ## Qué se configura
 
 Workflow: **Android Debug APK**, archivo `.github/workflows/android-debug.yml`. Solo se activa manualmente mediante `workflow_dispatch`; el job solo compila `feature/h01-prototipo`. No hace merge, no publica Releases ni distribuye a tiendas. Permisos del token: únicamente `contents: read`.
@@ -50,7 +52,7 @@ Artefacto por ejecución: **`hashi-h01-debug-arm64-<número de ejecución>`**, d
 
 Ruta del APK en el runner: `build/android/hashi-h01-debug-arm64.apk`. Paquete: `org.hashi.prototype`. Solo ARM64 (`arm64-v8a`), Android 7.0/API 24 o posterior, target API 36.
 
-Cada ejecución genera una clave **exclusivamente de depuración**, con contraseña aleatoria en memoria y archivo ignorado bajo `.local/`. La clave se borra al finalizar la exportación; no se incluye en el artefacto. No se guardan contraseñas ni claves privadas en Git y no se usa firma de producción. Puesto que la firma cambia entre ejecuciones, puede ser necesario desinstalar una compilación previa antes de instalar otra; esto elimina sus datos locales.
+La configuración actual reutiliza una identidad debug suministrada por secretos de Actions. No genera una clave por ejecución. Su copia temporal se elimina y nunca se incluye en los artefactos. Configuración, respaldo y transición desde APK antiguos con firma efímera: [firma persistente](ANDROID_SIGNING.md). No se usa firma de producción.
 
 Las verificaciones automáticas exigen firma válida, alineación de 16 KB para bibliotecas nativas, paquete y niveles SDK esperados, flag debug, única ABI ARM64, actividad de lanzamiento, ZIP íntegro y tableros empaquetados. Estas son comprobaciones del archivo: **no prueban que el sistema Android lo instale ni que el juego funcione en un teléfono**.
 

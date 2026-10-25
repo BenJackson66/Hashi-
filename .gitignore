@@ -6,3 +6,6 @@ export_credentials.cfg
 *.keystore
 *.jks
 *.p12
+
+# Local Python tooling caches.
+__pycache__/
