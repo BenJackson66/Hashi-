@@ -71,6 +71,34 @@ Con la misma semilla, parámetros y versión, **los resultados exitosos tienen e
 
 Un plazo de reloj puede agotarse en una máquina más lenta. En ese caso el resultado es fallo, nunca otro tablero: el generador **no salta un candidato cuya unicidad quedó incompleta** para aceptar otro que dependa de la velocidad de la máquina. Así no promete que un plazo de 1 ms tenga el mismo éxito en todos los dispositivos. Los límites de reloj son cooperativos, se comprueban entre pasos acotados y pueden excederse ligeramente por el paso en curso o por planificación del sistema operativo; no son una garantía de tiempo real.
 
+## Identidad estable de los tableros
+
+La versión del algoritmo sigue siendo **`h02b-1`**. La identidad tiene una versión independiente: **esquema 1**. Su formato es `procedural-id1-h02b-1-<sha256>`.
+
+Los parámetros aceptados se declaran en dos grupos explícitos; cualquier opción desconocida sigue siendo rechazada:
+
+| Grupo | Parámetros actuales | Efecto sobre el ID |
+| --- | --- | --- |
+| Contenido (`CONTENT_DEFAULTS`) | `width`, `height`, `island_count` | Se incluyen todos, con sus valores normalizados tras aplicar defaults. |
+| Presupuesto (`BUDGET_DEFAULTS`) | `max_attempts`, `max_time_ms`, `solver_max_nodes` | Se excluyen: pueden causar fallo, pero no seleccionar otro tablero exitoso. |
+
+La clasificación de presupuestos depende del comportamiento actual: el generador acepta el primer candidato demostrado único y aborta si una prueba queda incompleta. No sigue buscando otro candidato tras un corte. Por tanto, ampliar un presupuesto puede convertir un fallo en éxito, pero no cambiar el contenido de dos resultados exitosos de la misma receta. Un fallo no emite `puzzle` ni ID de tablero.
+
+El SHA-256 se calcula sobre un descriptor con `identity_schema`, `algorithm_version`, semilla original, diccionario completo de parámetros de contenido e islas completas. Se ordenan las islas por su ID y se usa `JSON.stringify(descriptor, "", true, true)`: claves ordenadas recursivamente y precisión numérica completa. Las pistas también forman parte del hash, como defensa frente a contenidos diferentes bajo una misma receta. Se excluyen título, ID previo, solución, métricas, tiempos y presupuestos. La función no modifica las islas recibidas.
+
+Al añadir parámetros futuros, hay que clasificarlos en uno de los dos grupos, no ampliar una lista posicional en la construcción del ID. Los campos de contenido se serializan completos, incluidos campos nuevos. Las pruebas comprueban que ambos grupos sean disjuntos. Si un parámetro puede alterar el contenido exitoso, pertenece al grupo de contenido; si solo restringe el trabajo, pertenece al de presupuesto. Un cambio en la representación canónica requiere revisar la versión del esquema, independientemente de la versión del algoritmo.
+
+Esta identidad representa **receta y contenido**, no deduplicación global: dos semillas distintas pueden producir las mismas pistas y seguir teniendo IDs diferentes. La resistencia a colisiones es la de SHA-256, no una garantía matemática de ausencia absoluta de colisiones.
+
+El cambio intencional frente a los resultados iniciales del PR es únicamente `puzzle.id`. No se ha cambiado el algoritmo, el PRNG, la selección de candidatos, sus pistas, las soluciones ni la estrategia del solucionador. Los IDs procedurales anteriores de desarrollo cambian de formato; no se migran partidas ni se modifica el guardado, ya que estos tableros aún no están integrados en el catálogo del juego.
+
+### Validación del ajuste de identidad
+
+- **57 comprobaciones específicas** en `tests/procedural_identity.gd`: defaults explícitos/omitidos, orden de diccionarios e islas, presupuesto individual y combinado, cambios de dimensiones/islas/semilla, pistas diferentes, campos futuros de contenido y precisión numérica.
+- Pruebas doradas separadas: el hash previo de las pistas de la semilla 42 sigue intacto, y el ID del esquema 1 queda fijado en la nueva suite.
+- Se vuelven a generar las 100 semillas de 5×5/10 islas y las 50 de 8×8/24 islas y se contrastan con los informes anteriores a este ajuste (`d248523`): **150/150** conservan pistas, soluciones, solución construida, intentos, parámetros y métricas no temporales. Solo cambia el ID; los tiempos son observaciones variables.
+- Toda la suite anterior sigue pasando: 60 H01, 121 H02-A, 615 H02-B, 15 de firma y los dos procesos de relanzamiento. No se han ejecutado compilaciones Android ni se ha tocado la firma.
+
 ## Métricas experimentales
 
 - `islands`: número de islas.
@@ -115,7 +143,8 @@ Por ejemplo, `--seed=42 --count=1 --width=5 --height=5 --island_count=10` reprod
 - **615 comprobaciones de H02-B**, sin fallos: definiciones válidas/incorrectas, cero/una/múltiples soluciones, cruces forzados, islas intermedias, desconexión, límites, reproducción, dimensiones y testigos de construcción.
 - Contraste con enumeración independiente de 256 combinaciones de pistas sobre un cuadrado y 64 sobre una topología con cruce posible. El oráculo no comparte propagación ni dominios con el solucionador.
 - Incluye el caso de encontrar una solución antes de agotar presupuesto: el resultado sigue siendo incompleto. Se prueban intentos positivos agotados y límites de tiempo positivos, no solo presupuestos cero.
-- Watchdog externo Linux de 30 s para la suite H02-B; las aserciones de tiempo usan márgenes amplios para detectar bloqueos y no comparar microsegundos entre máquinas. La suite H02-B tardó aproximadamente 0,21 s en este entorno.
+- 57 comprobaciones adicionales de identidad, detalladas arriba.
+- Watchdog externo Linux de 30 s para las suites H02-B e identidad; las aserciones de tiempo usan márgenes amplios para detectar bloqueos y no comparar microsegundos entre máquinas. La suite H02-B tardó aproximadamente 0,21 s en este entorno.
 - 15 pruebas de seguridad de firma existentes, aprobadas; no se suministraron secretos ni se ejecutaron compilaciones Android.
 
 CPU disponible: **AMD EPYC 9V74 80-Core Processor**, Godot 4.6.3 oficial. Medidas de generación completa, incluyendo candidatos rechazados y prueba de unicidad:

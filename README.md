@@ -65,4 +65,6 @@ Antes de compilar con esta configuración, el propietario debe preparar una úni
 ./tools/dev.sh --headless --script tools/evaluate_generation.gd -- --seed=42 --count=1
 ```
 
-Consulta [arquitectura, API, métricas, pruebas y rendimiento](docs/H02B_PROCEDURAL.md). `./tests/run.sh` conserva las pruebas existentes y añade 615 comprobaciones procedurales; requiere `timeout` de GNU Coreutils en Linux. No hay dependencias nuevas de aplicación, cambios en guardado ni cambios de firma Android.
+Consulta [arquitectura, API, métricas, pruebas y rendimiento](docs/H02B_PROCEDURAL.md). `./tests/run.sh` conserva las pruebas existentes y añade 615 comprobaciones procedurales y 57 de identidad; requiere `timeout` de GNU Coreutils en Linux. No hay dependencias nuevas de aplicación, cambios en guardado ni cambios de firma Android.
+
+Los IDs procedurales usan un esquema independiente (`procedural-id1-h02b-1-<sha256>`), con la semilla, todos los parámetros de contenido y las pistas en un descriptor canónico. Los presupuestos de intentos, tiempo y nodos no forman parte de la identidad: pueden hacer fallar una generación, pero no cambiar un tablero exitoso. `h02b-1` y sus resultados de contenido permanecen intactos.

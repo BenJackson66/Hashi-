@@ -5,7 +5,23 @@ const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Solver = preload("res://scripts/hashi_solver.gd")
 const ALGORITHM_VERSION := "h02b-1"
+# Identity schema evolves independently of the deterministic generation algorithm.
+const IDENTITY_SCHEMA_VERSION := 1
+# Every accepted option must be declared in exactly one of these groups.
+const CONTENT_DEFAULTS := {"width": 5, "height": 5, "island_count": 10}
+const BUDGET_DEFAULTS := {"max_attempts": 100, "max_time_ms": 1500, "solver_max_nodes": 100000}
 var _random_state: int
+
+static func puzzle_identity(seed_value: int, content_parameters: Dictionary, islands: Array) -> String:
+	# No title, previous puzzle ID, solution, metrics, timings or execution budgets.
+	# Full island definitions also protect against different clues sharing a recipe.
+	var canonical_islands := islands.duplicate(true)
+	canonical_islands.sort_custom(func(a: Dictionary, b: Dictionary): return str(a.id) < str(b.id))
+	var descriptor := {"identity_schema": IDENTITY_SCHEMA_VERSION,
+		"algorithm_version": ALGORITHM_VERSION, "seed": seed_value,
+		"content_parameters": content_parameters, "islands": canonical_islands}
+	var digest := JSON.stringify(descriptor, "", true, true).sha256_text()
+	return "procedural-id%d-%s-%s" % [IDENTITY_SCHEMA_VERSION, ALGORITHM_VERSION, digest]
 
 func _random(limit: int) -> int:
 	# Park–Miller: products fit in signed 64 bits; independent of engine RNG changes.
@@ -21,8 +37,8 @@ func _shuffle(items: Array) -> void:
 
 func generate(seed_value: int, options: Dictionary = {}) -> Dictionary:
 	var started := Time.get_ticks_usec()
-	var settings := {"width": 5, "height": 5, "island_count": 10, "max_attempts": 100,
-		"max_time_ms": 1500, "solver_max_nodes": 100000}
+	var settings := CONTENT_DEFAULTS.duplicate(true)
+	settings.merge(BUDGET_DEFAULTS)
 	for name in options:
 		if not settings.has(name) or not options[name] is int:
 			return _failure("invalid_options", 0, started)
@@ -55,7 +71,10 @@ func generate(seed_value: int, options: Dictionary = {}) -> Dictionary:
 			if solved.solutions[0] != candidate.solution:
 				return _failure("solution_mismatch", attempt + 1, started)
 			var data: Dictionary = candidate.puzzle
-			data.id = "procedural-%s-%d-%dx%d-%d" % [ALGORITHM_VERSION, seed_value, settings.width, settings.height, settings.island_count]
+			var content_parameters := {}
+			for name in CONTENT_DEFAULTS:
+				content_parameters[name] = settings[name]
+			data.id = puzzle_identity(seed_value, content_parameters, data.islands)
 			return {"status": "success", "algorithm_version": ALGORITHM_VERSION, "seed": seed_value,
 				"parameters": settings, "attempts": attempt + 1, "puzzle": data,
 				"solution": solved.solutions[0], "construction_solution": candidate.solution,

@@ -153,5 +153,39 @@
         }
       ]
     }
-  ]
+  ],
+  "identity_review_validation": {
+    "identity_schema": 1,
+    "algorithm_version": "h02b-1",
+    "baseline_commit": "d2485237f25a2cf7d82a7680ca343fef61a6de23",
+    "batches": [
+      {
+        "dimensions": [
+          5,
+          5
+        ],
+        "island_count": 10,
+        "seeds": [
+          1,
+          100
+        ],
+        "compared": 100,
+        "identical_except_puzzle_id_and_elapsed_times": 100
+      },
+      {
+        "dimensions": [
+          8,
+          8
+        ],
+        "island_count": 24,
+        "seeds": [
+          1,
+          50
+        ],
+        "compared": 50,
+        "identical_except_puzzle_id_and_elapsed_times": 50
+      }
+    ],
+    "identity_golden_seed_42": "procedural-id1-h02b-1-9ee1b9751911fc0d573e5aeaf302ca14761da348383407495e46210a0788f362"
+  }
 }
