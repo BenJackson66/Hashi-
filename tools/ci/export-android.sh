@@ -33,7 +33,7 @@ settings.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\
     + 'export/android/shutdown_adb_on_exit = false\n')
 PY
 godot --headless --path . --editor --import --quit
-godot --headless --path . --script tests/run.gd
+./tests/run.sh
 # Remove stale outputs so a failed export can never upload an old APK.
 rm -f build/android/hashi-h01-debug-arm64.apk build/android/hashi-h01-debug-arm64.apk.idsig \
   build/android/SHA256SUMS.txt build/android/apk-verification.txt build/android/apk-manifest.txt
