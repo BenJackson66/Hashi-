@@ -2,7 +2,9 @@ class_name HashiSaveStore
 extends RefCounted
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
-const VERSION := 1
+const Generator = preload("res://scripts/hashi_generator.gd")
+const Solver = preload("res://scripts/hashi_solver.gd")
+const VERSION := 2
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -13,13 +15,29 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or data.version != VERSION:
+	if not _integer(data.version) or (data.version != 1 and data.version != VERSION):
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
+	var allowed := ["version", "current_puzzle_id", "boards", "completed_ids"]
+	if data.version == VERSION:
+		allowed.append("procedural")
+		if not data.get("procedural") is Dictionary or data.procedural.size() > 1:
+			return false
+	for field in data:
+		if field not in allowed:
+			return false
 	var known := {}
 	for definition in catalog:
 		known[str(definition.id)] = definition
+	if data.version == VERSION:
+		for id in data.procedural:
+			if not id is String or known.has(id):
+				return false
+			var recipe := normalize_recipe(id, data.procedural[id])
+			if recipe.is_empty():
+				return false
+			known[id] = recipe.puzzle
 	if not known.has(data.current_puzzle_id) or not data.boards.has(data.current_puzzle_id):
 		return false
 	if data.boards.size() > known.size() or data.completed_ids.size() > known.size():
@@ -34,8 +52,54 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 		completed[id] = true
 	return true
 
+func normalize_recipe(id: String, value: Variant) -> Dictionary:
+	if not value is Dictionary or value.size() != 5 or not value.has_all(["seed", "algorithm_version", "identity_schema", "parameters", "puzzle"]):
+		return {}
+	if not value.seed is String or not value.seed.is_valid_int() or str(value.seed.to_int()) != value.seed:
+		return {}
+	if value.algorithm_version != Generator.ALGORITHM_VERSION or not _integer(value.identity_schema) or value.identity_schema != Generator.IDENTITY_SCHEMA_VERSION:
+		return {}
+	var settings: Variant = value.parameters
+	if not settings is Dictionary or settings.size() != Generator.CONTENT_DEFAULTS.size() + Generator.BUDGET_DEFAULTS.size():
+		return {}
+	var normalized := {}
+	for name in Generator.CONTENT_DEFAULTS.keys() + Generator.BUDGET_DEFAULTS.keys():
+		if not settings.has(name) or not _integer(settings[name]):
+			return {}
+		normalized[name] = int(settings[name])
+	if normalized.width < 1 or normalized.width > 16 or normalized.height < 1 or normalized.height > 16 or normalized.island_count < 2 or normalized.island_count > 64 or normalized.island_count > normalized.width * normalized.height or normalized.max_attempts < 1 or normalized.max_attempts > 10000 or normalized.max_time_ms < 1 or normalized.max_time_ms > 60000 or normalized.solver_max_nodes < 1 or normalized.solver_max_nodes > 1000000:
+		return {}
+	var definition: Variant = value.puzzle
+	if not definition is Dictionary or definition.size() != 3 or not definition.has_all(["id", "title", "islands"]):
+		return {}
+	if definition.id != id or not definition.title is String or definition.title.length() > 80 or not definition.islands is Array or definition.islands.size() != normalized.island_count:
+		return {}
+	var islands: Array = definition.islands.duplicate(true)
+	for item in islands:
+		if not item is Dictionary or item.size() != 6 or not item.has_all(["id", "x", "y", "target", "variant", "color"]):
+			return {}
+		if not item.id is String or item.id.length() > 32 or item.variant != "classic" or item.color != "neutral":
+			return {}
+		for field in ["x", "y", "target"]:
+			if not _integer(item[field]):
+				return {}
+			item[field] = int(item[field])
+		if item.x < 0 or item.x >= normalized.width or item.y < 0 or item.y >= normalized.height:
+			return {}
+	var puzzle := Puzzle.new({"id": id, "title": definition.title, "islands": islands})
+	if not Solver.valid_input(puzzle):
+		return {}
+	var content := {}
+	for name in Generator.CONTENT_DEFAULTS:
+		content[name] = normalized[name]
+	if Generator.puzzle_identity(value.seed.to_int(), content, islands) != id:
+		return {}
+	return {"seed": value.seed, "algorithm_version": Generator.ALGORITHM_VERSION,
+		"identity_schema": Generator.IDENTITY_SCHEMA_VERSION, "parameters": normalized,
+		"puzzle": {"id": id, "title": definition.title, "islands": islands}}
+
 func _integer(value: Variant) -> bool:
-	return (value is int or value is float) and is_finite(float(value)) and float(value) == floor(float(value))
+	return (value is int or value is float) and is_finite(float(value)) and absf(float(value)) <= 9007199254740991.0 and float(value) == floor(float(value))
 
 func _valid_bridges(bridges: Variant, definition: Dictionary) -> bool:
 	if not bridges is Dictionary:
@@ -78,6 +142,9 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
+	restored.procedural = {}
+	for id in parser.data.get("procedural", {}):
+		restored.procedural[id] = normalize_recipe(id, parser.data.procedural[id])
 	for id in restored.boards:
 		for edge in restored.boards[id]:
 			restored.boards[id][edge] = int(restored.boards[id][edge])
