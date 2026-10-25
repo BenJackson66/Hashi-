@@ -1,0 +1,8 @@
+.godot/
+build/
+export_credentials.cfg
+.local/
+# Android signing material must never enter version control.
+*.keystore
+*.jks
+*.p12
