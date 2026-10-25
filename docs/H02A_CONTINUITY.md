@@ -1,5 +1,7 @@
 # H02-A — Experiencia y continuidad
 
+Nota de versión: [H02-C](H02C_PLAYABLE.md) amplía este formato histórico a v2 conservando la lectura de v1 y la misma ruta de archivo.
+
 Base de desarrollo: `main` en `b10cbb0`. Rama: `feature/h02a-continuidad`. Sin cambios en reglas clásicas, modelo de islas, datos/soluciones de los tres tableros ni las 60 comprobaciones originales. Sin generación procedural.
 
 ## Juego

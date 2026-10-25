@@ -1,4 +1,4 @@
-# Hashi — prototipo y lógica procedural
+# Hashi — tableros procedurales jugables
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
 
@@ -6,7 +6,7 @@ Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador 
 
 1. Instala Godot 4.x estándar (no necesita .NET).
 2. Importa `project.godot` desde el gestor de proyectos y pulsa **F6/F5** para ejecutar la escena/proyecto. La escena principal es `scenes/main.tscn`.
-3. Selecciona uno de los tres tableros. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
+3. Selecciona uno de los tres tableros o pulsa **Nuevo tablero** para generar un procedural 5×5 de 10 islas en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
 4. Cada gesto alterna **0 → 1 → 2 → 0** puentes. Los puentes deben unir vecinos horizontales/verticales y nunca cruzarse ni atravesar islas.
 5. Completa el número de cada isla y conecta toda la red para obtener la victoria. **Reiniciar** borra los puentes del tablero actual y se puede deshacer. Cambiar de tablero conserva los puentes de cada nivel.
 
@@ -22,7 +22,7 @@ En Linux restringido, usa `./tools/dev.sh` para jugar o `./tools/dev.sh --editor
 - `scripts/main.gd` — controles de partida, selector y mensajes.
 - `data/puzzles.json` — Inicio (4 islas), Conexiones (9), Cruces (12). Complejidad creciente por tamaño y conexiones candidatas; no se afirma una clasificación de dificultad lógica.
 
-El historial, la secuencia y el guardado están separados en `HashiHistory`, `HashiSequence`, `HashiSession` y `HashiSaveStore`. El guardado automático conserva el tablero actual, los puentes de los tableros visitados y los niveles completados en `user://hashi-save-v1.json`. Los metadatos de variantes y los IDs dejan puntos de extensión para colores, generación y un solucionador. La lógica de generación y solución está disponible desde H02-B, sin integración en la interfaz. **Las variantes por color y las futuras modalidades aún no están implementadas**. El enumerador exhaustivo existe exclusivamente en pruebas para comprobar unicidad, no forma parte del juego.
+El historial, la secuencia y el guardado están separados en `HashiHistory`, `HashiSequence`, `HashiSession` y `HashiSaveStore`. El guardado automático conserva el tablero actual, los puentes de los tableros visitados y los niveles completados en `user://hashi-save-v1.json`. Los metadatos de variantes y los IDs dejan puntos de extensión para colores, generación y un solucionador. La lógica de H02-B está integrada mediante Nuevo tablero desde H02-C. Se conserva un procedural reciente, con su receta, ID y puentes, además de los tres tableros prediseñados. **Las variantes por color y las futuras modalidades aún no están implementadas**. El enumerador de referencia se mantiene en pruebas; el solucionador independiente de H02-B verifica la unicidad antes de presentar un procedural.
 
 ## Pruebas
 
@@ -59,12 +59,18 @@ Antes de compilar con esta configuración, el propietario debe preparar una úni
 
 ## Generación procedural (H02-B)
 
-`HashiSolver` y `HashiGenerator` funcionan sin escenas y aceptan límites de tiempo/trabajo. El generador usa semilla y versión de algoritmo, construye una solución válida y solo entrega pistas cuya unicidad haya demostrado el solucionador. La interfaz sigue usando los tres tableros originales.
+`HashiSolver` y `HashiGenerator` funcionan sin escenas y aceptan límites de tiempo/trabajo. El generador usa semilla y versión de algoritmo, construye una solución válida y solo entrega pistas cuya unicidad haya demostrado el solucionador. La interfaz conserva los tres tableros originales y permite generar un procedural reciente desde H02-C.
 
 ```bash
 ./tools/dev.sh --headless --script tools/evaluate_generation.gd -- --seed=42 --count=1
 ```
 
-Consulta [arquitectura, API, métricas, pruebas y rendimiento](docs/H02B_PROCEDURAL.md). `./tests/run.sh` conserva las pruebas existentes y añade 615 comprobaciones procedurales y 57 de identidad; requiere `timeout` de GNU Coreutils en Linux. No hay dependencias nuevas de aplicación, cambios en guardado ni cambios de firma Android.
+Consulta [arquitectura, API, métricas, pruebas y rendimiento](docs/H02B_PROCEDURAL.md). `./tests/run.sh` conserva las pruebas existentes y añade 615 comprobaciones procedurales y 57 de identidad; requiere `timeout` de GNU Coreutils en Linux. No hay dependencias nuevas de aplicación ni cambios de firma Android. H02-C amplía el guardado a v2 manteniendo lectura de v1 y la misma ruta histórica.
 
 Los IDs procedurales usan un esquema independiente (`procedural-id1-h02b-1-<sha256>`), con la semilla, todos los parámetros de contenido y las pistas en un descriptor canónico. Los presupuestos de intentos, tiempo y nodos no forman parte de la identidad: pueden hacer fallar una generación, pero no cambiar un tablero exitoso. `h02b-1` y sus resultados de contenido permanecen intactos.
+
+## Nuevo tablero y recuperación (H02-C)
+
+**Nuevo tablero** genera en `WorkerThreadPool`, con indicador discreto y protección frente a duplicados y resultados tardíos. El tablero anterior permanece jugable mientras se trabaja. Solo un éxito sustituye el procedural reciente; los tres prediseñados y su navegación se conservan. La solución nunca se entrega a la UI ni se guarda como testigo oculto.
+
+Se guardan pistas, receta y puentes en formato v2 de `user://hashi-save-v1.json`; las partidas v1 se leen y migran al siguiente guardado. Los nuevos tests comprueban el ciclo generar → jugar → cerrar → abrir → continuar con dos procesos reales, además de 99 comprobaciones de integración. Véase [H02C_PLAYABLE.md](docs/H02C_PLAYABLE.md) para arquitectura, límites, compatibilidad y validación Android después de revisar el PR.
