@@ -80,3 +80,24 @@ La instalación física puede verificarse además con `adb install <apk>` en un 
 APK local: `build/android/hashi-h01-debug-arm64.apk`, aproximadamente 27 MB. Este archivo generado está ignorado por Git; no es un artefacto de Actions. Su suma está en `build/android/SHA256SUMS.txt`.
 
 La exportación local se probó con OpenJDK 21, versión superior admitida por Godot; el workflow fija el JDK 17 recomendado. Se usaron Build-Tools 36.1.0 y la plantilla oficial 4.6.3. No se instaló el APK en Android ni se probó el juego en un dispositivo real.
+
+### Intento de ejecución después de publicar el workflow
+
+El commit de configuración `ff84dba` se publicó en `feature/h01-prototipo`. Después se ejecutó:
+
+```text
+gh workflow run android-debug.yml --repo BenJackson66/Hashi- --ref feature/h01-prototipo
+HTTP 404: Not Found
+```
+
+La consulta `actions/workflows` devolvió `total_count: 0`; la lista de ejecuciones para la rama estaba vacía. La consulta de permisos administrativos de Actions devolvió HTTP 403, `Resource not accessible by integration`. Por tanto, no se ha verificado la habilitación global de Actions y **no se ejecutó un build de GitHub Actions ni se publicó su artefacto**. El acceso Git a la rama y la lectura de metadatos del repositorio sí funcionan.
+
+El bloqueo concreto de activación es que `main`, la rama predeterminada confirmada por la API, no contiene el workflow. Se necesita autorización separada para incorporarlo allí o ajustar la rama predeterminada y, si procede, un administrador debe revisar los permisos de Actions. No se modificó `main` ni se fusionaron ramas como parte de esta misión.
+
+La suma SHA-256 del APK generado y verificado en esta máquina es:
+
+```text
+cbe8fc239b9204753191b2620a828c9961297e90ba7163d8bf07788c4075ff0a  hashi-h01-debug-arm64.apk
+```
+
+Tamaño exacto: **27 595 923 bytes**. Una nueva exportación genera otra firma debug y puede cambiar esta suma.
