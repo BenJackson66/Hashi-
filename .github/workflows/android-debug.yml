@@ -13,8 +13,8 @@ concurrency:
 jobs:
   build:
     name: Godot 4.6.3 · ARM64 debug
-    # Allow builds from main and the prototype branch.
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/h01-prototipo'
+    # Allow main and the reviewed development branches.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/h01-prototipo' || github.ref == 'refs/heads/feature/h02a-continuidad'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

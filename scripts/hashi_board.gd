@@ -2,7 +2,10 @@ class_name HashiBoard
 extends Control
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
+const History = preload("res://scripts/hashi_history.gd")
 signal state_changed(message: String)
+signal puzzle_changed
+var history := History.new()
 var puzzle: Puzzle
 var warnings_enabled := false
 var selected := ""
@@ -17,6 +20,7 @@ func _ready() -> void:
 
 func set_puzzle(value: Puzzle) -> void:
 	puzzle = value
+	history.clear()
 	selected = ""
 	pressed = ""
 	active_touch = -1
@@ -24,10 +28,32 @@ func set_puzzle(value: Puzzle) -> void:
 
 func reset() -> void:
 	if puzzle:
+		var before := puzzle.bridges.duplicate(true)
 		puzzle.reset()
+		_finish_change(before)
+
+func undo() -> void:
+	if puzzle and history.undo(puzzle):
+		_notify_change()
+
+func redo() -> void:
+	if puzzle and history.redo(puzzle):
+		_notify_change()
+
+func _finish_change(before: Dictionary) -> void:
+	if history.record(before, puzzle.bridges):
+		_notify_change()
+	else:
 		selected = ""
-		state_changed.emit("")
 		queue_redraw()
+
+func _notify_change() -> void:
+	selected = ""
+	pressed = ""
+	active_touch = -1
+	puzzle_changed.emit()
+	state_changed.emit("")
+	queue_redraw()
 
 func _layout_islands() -> void:
 	centers.clear()
@@ -100,7 +126,9 @@ func _release(point: Vector2) -> void:
 	queue_redraw()
 
 func _connect_islands(a: String, b: String) -> void:
+	var before := puzzle.bridges.duplicate(true)
 	var error := Rules.cycle_bridge(puzzle, a, b)
+	_finish_change(before)
 	selected = ""
 	state_changed.emit(error if warnings_enabled else "")
 
