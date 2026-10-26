@@ -1,0 +1,683 @@
+{
+  "analyzer_version": "h03a-1",
+  "base_commit": "5df7fd7c0f77e85f8670399e1d17f0bb2ef44719",
+  "python": "3.12.14",
+  "seed_start": 1,
+  "count_per_configuration": 200,
+  "source_sha256": {
+    "scripts/hashi_generator.gd": "b87ef4226adfd55b9c30bcf502b68af9e2ae71a321d5ebfbf181fe2d96655288",
+    "scripts/hashi_solver.gd": "7f1631dbbce965667b1f5ce0d1b36a04a279e9ef088fed533455db92817d2b9f"
+  },
+  "configurations": [
+    {
+      "dimensions": [
+        5,
+        5
+      ],
+      "islands": 10,
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 5,
+          "island_count": 10,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 5
+        },
+        "type": "environment"
+      },
+      "generation": {
+        "count": 200,
+        "failures": 0,
+        "max_ms": 15.083,
+        "mean_ms": 3.258255,
+        "median_ms": 2.346,
+        "p95_ms": 7.255,
+        "successes": 200,
+        "type": "summary"
+      },
+      "failures": {},
+      "profiles": {
+        "local": 181,
+        "contradiction1": 19
+      },
+      "profiles_detail": {
+        "local": {
+          "seeds_first_10": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "acceptance_per_requested_seed": 0.905,
+          "amortized_generation_ms": 3.600281767955801,
+          "solver_nodes": {
+            "mean": 1,
+            "p95": 1,
+            "max": 1
+          },
+          "solver_ms": {
+            "mean": 0.9425635359116022,
+            "p95": 1.144,
+            "max": 3.064
+          },
+          "analysis_ms": {
+            "mean": 0.22634325400432212,
+            "p95": 0.3189020062563941,
+            "max": 0.635509000858292
+          },
+          "deductions": {
+            "mean": 16.03314917127072,
+            "p95": 21,
+            "max": 24
+          },
+          "probe_tests": {
+            "mean": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "amortized_generation_and_analysis_ms": 3.873185419567819
+        },
+        "contradiction1": {
+          "seeds_first_10": [
+            28,
+            32,
+            38,
+            64,
+            72,
+            75,
+            87,
+            91,
+            92,
+            113
+          ],
+          "acceptance_per_requested_seed": 0.095,
+          "amortized_generation_ms": 34.29742105263158,
+          "solver_nodes": {
+            "mean": 3.210526315789474,
+            "p95": 5,
+            "max": 5
+          },
+          "solver_ms": {
+            "mean": 1.0464736842105262,
+            "p95": 1.175,
+            "max": 1.175
+          },
+          "analysis_ms": {
+            "mean": 0.4435490508943698,
+            "p95": 0.6889100041007623,
+            "max": 0.6889100041007623
+          },
+          "deductions": {
+            "mean": 17.473684210526315,
+            "p95": 21,
+            "max": 21
+          },
+          "probe_tests": {
+            "mean": 1.736842105263158,
+            "p95": 4,
+            "max": 4
+          },
+          "amortized_generation_and_analysis_ms": 36.89718741798817
+        }
+      },
+      "accepted_deductions_by_technique": {
+        "local_capacity": 3200,
+        "crossing_exclusion": 12,
+        "single_assumption_contradiction": 22
+      },
+      "structure_means": {
+        "possible_connections": 10.65,
+        "crossing_pairs": 0.455,
+        "double_bridge_ratio": 0.5430454545454546,
+        "generation_attempts": 2.04
+      }
+    },
+    {
+      "dimensions": [
+        5,
+        5
+      ],
+      "islands": 16,
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 5,
+          "island_count": 16,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 5
+        },
+        "type": "environment"
+      },
+      "generation": {
+        "count": 200,
+        "failures": 0,
+        "max_ms": 220.653,
+        "mean_ms": 41.110085,
+        "median_ms": 24.6,
+        "p95_ms": 115.759,
+        "successes": 200,
+        "type": "summary"
+      },
+      "failures": {},
+      "profiles": {
+        "local": 146,
+        "contradiction1": 54
+      },
+      "profiles_detail": {
+        "local": {
+          "seeds_first_10": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            11,
+            12,
+            14
+          ],
+          "acceptance_per_requested_seed": 0.73,
+          "amortized_generation_ms": 56.31518493150685,
+          "solver_nodes": {
+            "mean": 1,
+            "p95": 1,
+            "max": 1
+          },
+          "solver_ms": {
+            "mean": 2.8121712328767123,
+            "p95": 3.184,
+            "max": 4.562
+          },
+          "analysis_ms": {
+            "mean": 0.8341369314010778,
+            "p95": 1.0713329975260422,
+            "max": 1.395023995428346
+          },
+          "deductions": {
+            "mean": 35.57534246575342,
+            "p95": 42,
+            "max": 44
+          },
+          "probe_tests": {
+            "mean": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "amortized_generation_and_analysis_ms": 57.882953602878096
+        },
+        "contradiction1": {
+          "seeds_first_10": [
+            8,
+            9,
+            10,
+            13,
+            21,
+            24,
+            30,
+            32,
+            35,
+            36
+          ],
+          "acceptance_per_requested_seed": 0.27,
+          "amortized_generation_ms": 152.25957407407407,
+          "solver_nodes": {
+            "mean": 5.222222222222222,
+            "p95": 11,
+            "max": 19
+          },
+          "solver_ms": {
+            "mean": 3.3291851851851852,
+            "p95": 4.227,
+            "max": 4.84
+          },
+          "analysis_ms": {
+            "mean": 1.9835228525119386,
+            "p95": 4.21768099477049,
+            "max": 7.591364003019407
+          },
+          "deductions": {
+            "mean": 39.888888888888886,
+            "p95": 44,
+            "max": 44
+          },
+          "probe_tests": {
+            "mean": 3.9814814814814814,
+            "p95": 13,
+            "max": 30
+          },
+          "amortized_generation_and_analysis_ms": 156.49835603741116
+        }
+      },
+      "accepted_deductions_by_technique": {
+        "local_capacity": 7134,
+        "crossing_exclusion": 100,
+        "single_assumption_contradiction": 114
+      },
+      "structure_means": {
+        "possible_connections": 22.01,
+        "crossing_pairs": 1.855,
+        "double_bridge_ratio": 0.5812069143446853,
+        "generation_attempts": 5.43
+      }
+    },
+    {
+      "dimensions": [
+        7,
+        7
+      ],
+      "islands": 16,
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 7,
+          "island_count": 16,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 7
+        },
+        "type": "environment"
+      },
+      "generation": {
+        "count": 200,
+        "failures": 0,
+        "max_ms": 37.481,
+        "mean_ms": 10.590875,
+        "median_ms": 6.9535,
+        "p95_ms": 25.901,
+        "successes": 200,
+        "type": "summary"
+      },
+      "failures": {},
+      "profiles": {
+        "local": 169,
+        "contradiction1": 31
+      },
+      "profiles_detail": {
+        "local": {
+          "seeds_first_10": [
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "acceptance_per_requested_seed": 0.845,
+          "amortized_generation_ms": 12.533579881656806,
+          "solver_nodes": {
+            "mean": 1,
+            "p95": 1,
+            "max": 1
+          },
+          "solver_ms": {
+            "mean": 2.4223609467455622,
+            "p95": 2.715,
+            "max": 3.251
+          },
+          "analysis_ms": {
+            "mean": 0.6354447396006435,
+            "p95": 0.8076239901129156,
+            "max": 1.290656000492163
+          },
+          "deductions": {
+            "mean": 30.023668639053255,
+            "p95": 36,
+            "max": 40
+          },
+          "probe_tests": {
+            "mean": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "amortized_generation_and_analysis_ms": 13.4241088873569
+        },
+        "contradiction1": {
+          "seeds_first_10": [
+            3,
+            12,
+            13,
+            16,
+            19,
+            33,
+            35,
+            39,
+            41,
+            44
+          ],
+          "acceptance_per_requested_seed": 0.155,
+          "amortized_generation_ms": 68.32822580645161,
+          "solver_nodes": {
+            "mean": 3.7419354838709675,
+            "p95": 7,
+            "max": 9
+          },
+          "solver_ms": {
+            "mean": 2.867032258064516,
+            "p95": 3.627,
+            "max": 3.631
+          },
+          "analysis_ms": {
+            "mean": 1.39062067647765,
+            "p95": 2.3848840064601973,
+            "max": 7.01805399148725
+          },
+          "deductions": {
+            "mean": 33.193548387096776,
+            "p95": 39,
+            "max": 40
+          },
+          "probe_tests": {
+            "mean": 2.2903225806451615,
+            "p95": 6,
+            "max": 10
+          },
+          "amortized_generation_and_analysis_ms": 73.1830452246231
+        }
+      },
+      "accepted_deductions_by_technique": {
+        "local_capacity": 6003,
+        "single_assumption_contradiction": 43,
+        "crossing_exclusion": 56,
+        "cut_parity": 1
+      },
+      "structure_means": {
+        "possible_connections": 18.65,
+        "crossing_pairs": 2.075,
+        "double_bridge_ratio": 0.5138664215686275,
+        "generation_attempts": 2.61
+      }
+    },
+    {
+      "dimensions": [
+        8,
+        8
+      ],
+      "islands": 24,
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 8,
+          "island_count": 24,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 8
+        },
+        "type": "environment"
+      },
+      "generation": {
+        "count": 200,
+        "failures": 0,
+        "max_ms": 288.026,
+        "mean_ms": 48.080355,
+        "median_ms": 32.753,
+        "p95_ms": 157.576,
+        "successes": 200,
+        "type": "summary"
+      },
+      "failures": {},
+      "profiles": {
+        "local": 141,
+        "contradiction1": 59
+      },
+      "profiles_detail": {
+        "local": {
+          "seeds_first_10": [
+            1,
+            4,
+            8,
+            10,
+            11,
+            13,
+            15,
+            16,
+            17,
+            18
+          ],
+          "acceptance_per_requested_seed": 0.705,
+          "amortized_generation_ms": 68.19908510638298,
+          "solver_nodes": {
+            "mean": 1,
+            "p95": 1,
+            "max": 1
+          },
+          "solver_ms": {
+            "mean": 6.473553191489362,
+            "p95": 7.108,
+            "max": 10.336
+          },
+          "analysis_ms": {
+            "mean": 1.8751038299709994,
+            "p95": 2.2682670096401125,
+            "max": 3.425529008382
+          },
+          "deductions": {
+            "mean": 54.851063829787236,
+            "p95": 62,
+            "max": 65
+          },
+          "probe_tests": {
+            "mean": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "amortized_generation_and_analysis_ms": 71.91873918428477
+        },
+        "contradiction1": {
+          "seeds_first_10": [
+            2,
+            3,
+            5,
+            6,
+            7,
+            9,
+            12,
+            14,
+            19,
+            20
+          ],
+          "acceptance_per_requested_seed": 0.295,
+          "amortized_generation_ms": 162.98425423728813,
+          "solver_nodes": {
+            "mean": 5,
+            "p95": 14,
+            "max": 15
+          },
+          "solver_ms": {
+            "mean": 7.205033898305085,
+            "p95": 9.22,
+            "max": 10.119
+          },
+          "analysis_ms": {
+            "mean": 4.408162456919376,
+            "p95": 16.006828998797573,
+            "max": 25.28588600398507
+          },
+          "deductions": {
+            "mean": 58.08474576271186,
+            "p95": 63,
+            "max": 64
+          },
+          "probe_tests": {
+            "mean": 5.576271186440678,
+            "p95": 37,
+            "max": 61
+          },
+          "amortized_generation_and_analysis_ms": 171.87359703362972
+        }
+      },
+      "accepted_deductions_by_technique": {
+        "crossing_exclusion": 286,
+        "local_capacity": 10744,
+        "single_assumption_contradiction": 129,
+        "connectivity_cut": 1,
+        "cut_parity": 1
+      },
+      "structure_means": {
+        "possible_connections": 32.235,
+        "crossing_pairs": 6.51,
+        "double_bridge_ratio": 0.5261163842834382,
+        "generation_attempts": 3.83
+      }
+    },
+    {
+      "dimensions": [
+        10,
+        10
+      ],
+      "islands": 30,
+      "environment": {
+        "algorithm_version": "h02b-1",
+        "cpu": "AMD EPYC 9V74 80-Core Processor",
+        "godot": "4.6.3-stable (official)",
+        "parameters": {
+          "height": 10,
+          "island_count": 30,
+          "max_attempts": 100,
+          "max_time_ms": 1500,
+          "solver_max_nodes": 100000,
+          "width": 10
+        },
+        "type": "environment"
+      },
+      "generation": {
+        "count": 200,
+        "failures": 0,
+        "max_ms": 455.969,
+        "mean_ms": 95.8418650000001,
+        "median_ms": 71.6685,
+        "p95_ms": 258.636,
+        "successes": 200,
+        "type": "summary"
+      },
+      "failures": {},
+      "profiles": {
+        "local": 144,
+        "contradiction1": 56
+      },
+      "profiles_detail": {
+        "local": {
+          "seeds_first_10": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "acceptance_per_requested_seed": 0.72,
+          "amortized_generation_ms": 133.1137013888889,
+          "solver_nodes": {
+            "mean": 1,
+            "p95": 1,
+            "max": 1
+          },
+          "solver_ms": {
+            "mean": 10.713375,
+            "p95": 11.713,
+            "max": 13.495
+          },
+          "analysis_ms": {
+            "mean": 3.1389090488826494,
+            "p95": 3.898188006132841,
+            "max": 13.050507011939771
+          },
+          "deductions": {
+            "mean": 70.05555555555556,
+            "p95": 78,
+            "max": 83
+          },
+          "probe_tests": {
+            "mean": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "amortized_generation_and_analysis_ms": 138.18985394416313
+        },
+        "contradiction1": {
+          "seeds_first_10": [
+            11,
+            13,
+            17,
+            23,
+            28,
+            31,
+            34,
+            35,
+            38,
+            39
+          ],
+          "acceptance_per_requested_seed": 0.28,
+          "amortized_generation_ms": 342.292375,
+          "solver_nodes": {
+            "mean": 5,
+            "p95": 9,
+            "max": 12
+          },
+          "solver_ms": {
+            "mean": 11.811982142857143,
+            "p95": 13.522,
+            "max": 15.068
+          },
+          "analysis_ms": {
+            "mean": 4.9814833021498215,
+            "p95": 9.129832993494347,
+            "max": 11.02140599687118
+          },
+          "deductions": {
+            "mean": 72.46428571428571,
+            "p95": 80,
+            "max": 81
+          },
+          "probe_tests": {
+            "mean": 2.7857142857142856,
+            "p95": 7,
+            "max": 13
+          },
+          "amortized_generation_and_analysis_ms": 355.34533871356234
+        }
+      },
+      "accepted_deductions_by_technique": {
+        "crossing_exclusion": 435,
+        "local_capacity": 13599,
+        "connectivity_cut": 4,
+        "cut_parity": 2,
+        "single_assumption_contradiction": 106
+      },
+      "structure_means": {
+        "possible_connections": 40.5,
+        "crossing_pairs": 10.775,
+        "double_bridge_ratio": 0.5167391902622612,
+        "generation_attempts": 6.025
+      }
+    }
+  ]
+}
