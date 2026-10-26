@@ -252,7 +252,7 @@ func test_ui() -> void:
 		var ids: PackedStringArray = edge.split(":")
 		for count in int(solved.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
-	check(not ui.next_button.disabled and ui.next_button.text == "Inicio" and "resuelto" in ui.status.text, "procedural victory and return control")
+	check(not ui.next_button.disabled and ui.next_button.text == "Volver al primero" and "resuelto" in ui.status.text, "procedural victory and return control")
 	check(id in ui.session.completed_ids and not contains_solution(ui.session.snapshot_data()), "procedural completion saved without hidden solution fields")
 	ui.next_button.pressed.emit()
 	check(ui.session.current_index == 0 and ui.session.procedural.has(id), "return to static sequence preserves procedural game")
