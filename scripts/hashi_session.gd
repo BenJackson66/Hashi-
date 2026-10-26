@@ -82,6 +82,20 @@ func install_procedural_and_save(value: Dictionary) -> bool:
 	current_index = staged.current_index
 	return true
 
+func select_and_save(index: int) -> bool:
+	# Selection is also committed before replacing the visible board/history.
+	var staged := HashiSession.new(base_catalog, store.path)
+	staged.catalog = catalog.duplicate(true)
+	staged.procedural = procedural.duplicate(true)
+	staged.boards = boards.duplicate(true)
+	staged.completed_ids = completed_ids.duplicate()
+	staged.current_index = current_index
+	if not staged.select(index) or not store.save_game(staged.snapshot_data(), base_catalog):
+		return false
+	boards = staged.boards
+	current_index = staged.current_index
+	return true
+
 func current_puzzle() -> Puzzle:
 	var puzzle := Puzzle.new(catalog[current_index])
 	puzzle.bridges = boards.get(puzzle.puzzle_id, {}).duplicate(true)

@@ -1,4 +1,4 @@
-# Hashi — tableros procedurales jugables
+# Hashi — inicio, aprendizaje y tableros procedurales
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
 
@@ -6,7 +6,7 @@ Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador 
 
 1. Instala Godot 4.x estándar (no necesita .NET).
 2. Importa `project.godot` desde el gestor de proyectos y pulsa **F6/F5** para ejecutar la escena/proyecto. La escena principal es `scenes/main.tscn`.
-3. Selecciona uno de los tres tableros o pulsa **Nuevo tablero** para generar un procedural 5×5 de 10 islas en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
+3. La aplicación abre en **Inicio**. Usa **Continuar partida** para recuperar la última selección, **Aprender a jugar** para elegir cualquiera de los tres tableros, **Cómo jugar** para consultar las reglas o **Nuevo tablero** para generar un procedural 5×5 de 10 islas en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
 4. Cada gesto alterna **0 → 1 → 2 → 0** puentes. Los puentes deben unir vecinos horizontales/verticales y nunca cruzarse ni atravesar islas.
 5. Completa el número de cada isla y conecta toda la red para obtener la victoria. **Reiniciar** borra los puentes del tablero actual y se puede deshacer. Cambiar de tablero conserva los puentes de cada nivel.
 
@@ -19,7 +19,8 @@ En Linux restringido, usa `./tools/dev.sh` para jugar o `./tools/dev.sh --editor
 - `scripts/hashi_puzzle.gd` — `HashiPuzzle`: estado independiente de nodos, islas con ID estable, coordenadas, objetivo y metadatos `variant`/`color`; puentes identificados por un par canónico de IDs.
 - `scripts/hashi_rules.gd` — `HashiRules`: vecindad, geometría, ciclo de puentes, grados y victoria con conectividad. No depende de la interfaz.
 - `scripts/hashi_board.gd` — `HashiBoard`: dibujo adaptable, selección y eventos de ratón/táctiles; delega las reglas.
-- `scripts/main.gd` — controles de partida, selector y mensajes.
+- `scripts/main.gd` — navegación, controles de partida y coordinación de generación/guardado.
+- `scripts/hashi_home.gd` — presentación independiente de Inicio, aprendizaje, reglas y confirmación; comunica acciones mediante señales.
 - `data/puzzles.json` — Inicio (4 islas), Conexiones (9), Cruces (12). Complejidad creciente por tamaño y conexiones candidatas; no se afirma una clasificación de dificultad lógica.
 
 El historial, la secuencia y el guardado están separados en `HashiHistory`, `HashiSequence`, `HashiSession` y `HashiSaveStore`. El guardado automático conserva el tablero actual, los puentes de los tableros visitados y los niveles completados en `user://hashi-save-v1.json`. Los metadatos de variantes y los IDs dejan puntos de extensión para colores, generación y un solucionador. La lógica de H02-B está integrada mediante Nuevo tablero desde H02-C. Se conserva un procedural reciente, con su receta, ID y puentes, además de los tres tableros prediseñados. **Las variantes por color y las futuras modalidades aún no están implementadas**. El enumerador de referencia se mantiene en pruebas; el solucionador independiente de H02-B verifica la unicidad antes de presentar un procedural.
@@ -74,3 +75,9 @@ Los IDs procedurales usan un esquema independiente (`procedural-id1-h02b-1-<sha2
 **Nuevo tablero** genera en `WorkerThreadPool`, con indicador discreto y protección frente a duplicados y resultados tardíos. El tablero anterior permanece jugable mientras se trabaja. Solo un éxito guardado correctamente sustituye el procedural reciente; los tres prediseñados y su navegación se conservan. La solución nunca se entrega a la UI ni se guarda como testigo oculto.
 
 Se guardan pistas, receta y puentes en formato v2 de `user://hashi-save-v1.json`; las partidas v1 se leen y migran al siguiente guardado. Los nuevos tests comprueban el ciclo generar → jugar → cerrar → abrir → continuar con dos procesos reales, además de 112 comprobaciones de integración. Si no se puede guardar el nuevo procedural, se conserva íntegra la partida anterior y se permite reintentar. Véase [H02C_PLAYABLE.md](docs/H02C_PLAYABLE.md) para arquitectura, límites, compatibilidad y validación Android después de revisar el PR.
+
+## Inicio y navegación (H03-B1)
+
+**Inicio** vuelve al menú conservando el tablero y su historial en memoria. **Continuar partida** abre la última selección sin reiniciarla. Los tres tableros de **Aprender a jugar** y el procedural conservan sus propios puentes. Antes de sustituir un procedural con puentes sin resolver se pide confirmación; cancelar no cambia la partida. Un fallo de generación o guardado conserva el estado anterior. No cambia el archivo/formato v1/v2.
+
+Consulta [H03B1_HOME_NAVIGATION.md](docs/H03B1_HOME_NAVIGATION.md) para arquitectura, casos de regresión, resultados y pasos de validación manual. No se ha compilado una APK para H03-B1 ni se ha validado su interfaz en un dispositivo físico.

@@ -3,7 +3,15 @@ const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Board = preload("res://scripts/hashi_board.gd")
 const Session = preload("res://scripts/hashi_session.gd")
+const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
+var home: Home
+var game_view: MarginContainer
+var home_button: Button
+var screen := "home"
+var _has_game := false
+var _confirmation_pending := false
+var _confirmation_origin := "home"
 var puzzles: Array = []
 var board: Board
 var session: Session
@@ -31,11 +39,12 @@ func _ready() -> void:
 	_seed_rng.randomize()
 	puzzles = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
 	session = Session.new(puzzles, save_path)
-	session.restore()
+	_has_game = session.restore()
 	if not session.procedural.is_empty():
 		_last_requested_seed = str(session.procedural.values()[0].seed).to_int()
 	var recovery_message := session.store.last_error
 	var margin := MarginContainer.new()
+	game_view = margin
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 12)
@@ -45,6 +54,8 @@ func _ready() -> void:
 	margin.add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
+	home_button = _button("Inicio", header, _show_home)
+	home_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var heading := Label.new()
 	heading.text = "HASHI"
 	heading.add_theme_font_size_override("font_size", 24)
@@ -83,7 +94,7 @@ func _ready() -> void:
 	column.add_child(history_row)
 	undo_button = _button("Deshacer", history_row, board.undo)
 	redo_button = _button("Rehacer", history_row, board.redo)
-	new_board_button = _button("Nuevo tablero", history_row, _request_new_puzzle)
+	new_board_button = _button("Nuevo tablero", history_row, _ask_new_puzzle)
 	var navigation := HBoxContainer.new()
 	column.add_child(navigation)
 	restart_button = _button("Reiniciar", navigation, board.reset)
@@ -91,16 +102,27 @@ func _ready() -> void:
 	board.puzzle_changed.connect(_on_puzzle_changed)
 	board.state_changed.connect(_update_status)
 	selector.item_selected.connect(_select_puzzle)
+	home = Home.new()
+	add_child(home)
+	home.build(puzzles)
+	home.continue_requested.connect(_continue_game)
+	home.new_requested.connect(_ask_new_puzzle)
+	home.lesson_requested.connect(_select_puzzle)
+	home.confirm_requested.connect(_confirm_new_puzzle)
+	home.cancel_requested.connect(_cancel_new_puzzle)
+	home.page_changed.connect(_on_home_page_changed)
 	_display_current()
+	_show_home()
 	if not recovery_message.is_empty():
-		status.text = recovery_message
+		_generation_message = recovery_message
+		_update_status("")
 
 func _button(text: String, parent: Control, callback: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size.y = 48
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 14)
+	button.add_theme_font_size_override("font_size", 16)
 	button.pressed.connect(callback)
 	parent.add_child(button)
 	return button
@@ -113,14 +135,88 @@ func _display_current() -> void:
 	_update_status("")
 
 func _select_puzzle(index: int) -> void:
-	if index != session.current_index and session.select(index):
+	if index < 0 or index >= session.catalog.size():
+		return
+	if index != session.current_index or not _has_game:
+		if not session.select_and_save(index):
+			_generation_message = "No se pudo guardar la selección. Se conserva tu partida. Inténtalo de nuevo."
+			_update_status("")
+			return
+		_has_game = true
+		save_failed = false
 		_display_current()
-		_save_game()
+	_open_game()
 
 func _next_puzzle() -> void:
-	if session.advance():
-		_display_current()
-		_save_game()
+	if not Rules.is_solved(board.puzzle):
+		return
+	var index := 0 if session.is_procedural() else session.sequence.ids.find(session.sequence.next_id(board.puzzle.puzzle_id))
+	_select_puzzle(index)
+
+func _show_home() -> void:
+	_confirmation_pending = false
+	_invalidate_generation()
+	screen = "home"
+	game_view.hide()
+	home.show()
+	home.show_page("home")
+	_clear_gesture()
+	_update_status("")
+
+func _on_home_page_changed() -> void:
+	_invalidate_generation()
+	_update_status("")
+
+func _clear_gesture() -> void:
+	board.selected = ""
+	board.pressed = ""
+	board.active_touch = -1
+	board.queue_redraw()
+
+func _open_game() -> void:
+	_confirmation_pending = false
+	_invalidate_generation()
+	screen = "game"
+	home.hide()
+	game_view.show()
+	_clear_gesture()
+	_update_status("")
+
+func _continue_game() -> void:
+	if _has_game:
+		_open_game()
+
+func _ask_new_puzzle() -> void:
+	if generation_task != null or _confirmation_pending or is_queued_for_deletion():
+		return
+	for id in session.procedural:
+		var previous := Puzzle.new(session.procedural[id].puzzle)
+		previous.bridges = session.boards.get(id, {}).duplicate(true)
+		if not previous.bridges.is_empty() and not Rules.is_solved(previous):
+			_confirmation_origin = screen
+			_confirmation_pending = true
+			screen = "confirm"
+			_clear_gesture()
+			game_view.hide()
+			home.show()
+			home.show_page("confirm")
+			return
+	_request_new_puzzle()
+
+func _cancel_new_puzzle() -> void:
+	if not _confirmation_pending:
+		return
+	_confirmation_pending = false
+	if _confirmation_origin == "game":
+		_open_game()
+	else:
+		_show_home()
+
+func _confirm_new_puzzle() -> void:
+	if not _confirmation_pending:
+		return
+	_cancel_new_puzzle()
+	_request_new_puzzle()
 
 func _on_puzzle_changed() -> void:
 	_invalidate_generation()
@@ -129,6 +225,7 @@ func _on_puzzle_changed() -> void:
 
 func _save_game() -> void:
 	save_failed = not session.save_game()
+	_has_game = true
 	_update_status("")
 
 func _notification(what: int) -> void:
@@ -143,7 +240,7 @@ func _update_status(message: String) -> void:
 	undo_button.disabled = board.history.past.is_empty()
 	redo_button.disabled = board.history.future.is_empty()
 	next_button.disabled = not solved
-	next_button.text = "Inicio" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
+	next_button.text = "Volver al primero" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
 	new_board_button.disabled = generation_task != null
 	_sync_selector()
 	if solved:
@@ -167,6 +264,8 @@ func _update_status(message: String) -> void:
 		status.text = _generation_message
 	if save_failed:
 		status.text += " No se pudo guardar la partida."
+	if home != null:
+		home.update_state(_has_game, generation_task != null, status.text if generation_task != null or not _generation_message.is_empty() or save_failed else "")
 
 func _sync_selector() -> void:
 	if selector.item_count != session.catalog.size():
@@ -226,7 +325,9 @@ func _process(_delta: float) -> void:
 		_update_status("")
 	elif session.install_procedural_and_save(result.recipe):
 		save_failed = false
+		_has_game = true
 		_display_current()
+		_open_game()
 	else:
 		# No new playable state was published; do not retry the rejected board on pause.
 		_generation_message = "No se pudo guardar el nuevo tablero. Se conserva tu partida. Inténtalo de nuevo."
