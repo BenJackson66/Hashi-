@@ -13,7 +13,7 @@ failed = [f"{job['name']} / {step['name']}: {step['conclusion']}" for job in job
 logs = subprocess.run(['gh', 'run', 'view', run, '--repo', repo, '--log-failed'], text=True, capture_output=True)
 selected = []
 for line in logs.stdout.splitlines():
-    if re.search(r'FAIL|ERROR|Error|Traceback|AssertionError|RESULT:|error:|exit code|Unable to', line):
+    if re.search(r'FAIL|ERROR|Error|Traceback|AssertionError|RESULT:|error:|exit code|Unable to|APK|certificate|signing|unbound variable', line):
         if re.search(r'KEYSTORE|PASSWORD|TOKEN|BASE64', line, re.I):
             continue
         line = re.sub(r'https?://\S+', '[URL omitted]', line)
