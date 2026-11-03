@@ -3,6 +3,7 @@ extends RefCounted
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Sequence = preload("res://scripts/hashi_sequence.gd")
+const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Store = preload("res://scripts/hashi_save_store.gd")
 var base_catalog: Array
 var procedural: Dictionary = {}
@@ -12,6 +13,7 @@ var store: Store
 var current_index := 0
 var boards: Dictionary = {}
 var completed_ids: Array = []
+var run: Dictionary = Mode.fresh()
 
 func _init(definitions: Array = [], save_path: String = "user://hashi-save-v1.json") -> void:
 	base_catalog = definitions.duplicate(true)
@@ -36,6 +38,7 @@ func restore() -> bool:
 			break
 	boards = data.boards.duplicate(true)
 	completed_ids = data.completed_ids.duplicate()
+	run = data.run.duplicate(true)
 	return true
 
 func is_procedural() -> bool:
@@ -55,45 +58,56 @@ func install_procedural(value: Dictionary) -> bool:
 		boards.erase(previous)
 		completed_ids.erase(previous)
 	procedural = {id: recipe}
+	run.credited_id = ""
 	catalog = base_catalog.duplicate(true)
 	catalog.append(recipe.puzzle.duplicate(true))
 	boards[id] = {}
 	current_index = catalog.size() - 1
 	return true
 
-func install_procedural_and_save(value: Dictionary) -> bool:
-	# Stage the replacement without mutating the live session or its UI/history.
+func _staged() -> HashiSession:
 	var staged := HashiSession.new(base_catalog, store.path)
 	staged.catalog = catalog.duplicate(true)
 	staged.procedural = procedural.duplicate(true)
 	staged.boards = boards.duplicate(true)
 	staged.completed_ids = completed_ids.duplicate()
 	staged.current_index = current_index
-	if not staged.install_procedural(value):
-		store.last_error = "No se pudo validar el nuevo tablero."
-		return false
-	# The store atomically replaces the file. Publish live state only after success.
-	if not store.save_game(staged.snapshot_data(), base_catalog):
-		return false
+	staged.run = run.duplicate(true)
+	return staged
+
+func _publish(staged: HashiSession) -> void:
 	catalog = staged.catalog
 	procedural = staged.procedural
 	boards = staged.boards
 	completed_ids = staged.completed_ids
 	current_index = staged.current_index
+	run = staged.run
+
+func install_procedural_and_save(value: Dictionary, requested_run: Dictionary = {}) -> bool:
+	var staged := _staged()
+	if not requested_run.is_empty():
+		staged.run = requested_run.duplicate(true)
+	if not staged.install_procedural(value):
+		store.last_error = "No se pudo validar el nuevo tablero."
+		return false
+	if not store.save_game(staged.snapshot_data(), base_catalog):
+		return false
+	_publish(staged)
 	return true
 
 func select_and_save(index: int) -> bool:
-	# Selection is also committed before replacing the visible board/history.
-	var staged := HashiSession.new(base_catalog, store.path)
-	staged.catalog = catalog.duplicate(true)
-	staged.procedural = procedural.duplicate(true)
-	staged.boards = boards.duplicate(true)
-	staged.completed_ids = completed_ids.duplicate()
-	staged.current_index = current_index
+	var staged := _staged()
 	if not staged.select(index) or not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
-	boards = staged.boards
-	current_index = staged.current_index
+	_publish(staged)
+	return true
+
+func capture_and_save(puzzle: Puzzle) -> bool:
+	# Board, completion credit and run advance form one atomic snapshot.
+	var staged := _staged()
+	if not staged.capture(puzzle) or not store.save_game(staged.snapshot_data(), base_catalog):
+		return false
+	_publish(staged)
 	return true
 
 func current_puzzle() -> Puzzle:
@@ -109,8 +123,11 @@ func capture(puzzle: Puzzle) -> bool:
 	if not store.valid_snapshot(snapshot, base_catalog):
 		return false
 	boards = snapshot.boards
-	if Rules.is_solved(puzzle) and puzzle.puzzle_id not in completed_ids:
-		completed_ids.append(puzzle.puzzle_id)
+	if Rules.is_solved(puzzle):
+		if puzzle.puzzle_id not in completed_ids:
+			completed_ids.append(puzzle.puzzle_id)
+		if is_procedural():
+			run = Mode.credit(run, puzzle.puzzle_id)
 	return true
 
 func select(index: int) -> bool:
@@ -133,7 +150,8 @@ func advance() -> bool:
 func snapshot_data() -> Dictionary:
 	return {"version": Store.VERSION, "current_puzzle_id": str(catalog[current_index].id),
 		"boards": boards.duplicate(true), "completed_ids": completed_ids.duplicate(),
-		"procedural": procedural.duplicate(true)}
+		"procedural": procedural.duplicate(true), "run": run.duplicate(true)}
 
 func save_game() -> bool:
 	return store.save_game(snapshot_data(), base_catalog)
+

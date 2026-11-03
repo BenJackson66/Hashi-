@@ -4,7 +4,8 @@ const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Generator = preload("res://scripts/hashi_generator.gd")
 const Solver = preload("res://scripts/hashi_solver.gd")
-const VERSION := 2
+const Mode = preload("res://scripts/hashi_play_mode.gd")
+const VERSION := 3
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -15,14 +16,18 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or (data.version != 1 and data.version != VERSION):
+	if not _integer(data.version) or int(data.version) not in [1, 2, VERSION]:
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
 	var allowed := ["version", "current_puzzle_id", "boards", "completed_ids"]
-	if data.version == VERSION:
+	if data.version >= 2:
 		allowed.append("procedural")
 		if not data.get("procedural") is Dictionary or data.procedural.size() > 1:
+			return false
+	if data.version == VERSION:
+		allowed.append("run")
+		if not Mode.valid(data.get("run"), data.procedural):
 			return false
 	for field in data:
 		if field not in allowed:
@@ -30,7 +35,7 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	var known := {}
 	for definition in catalog:
 		known[str(definition.id)] = definition
-	if data.version == VERSION:
+	if data.version >= 2:
 		for id in data.procedural:
 			if not id is String or known.has(id):
 				return false
@@ -142,9 +147,19 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
+	restored.run = parser.data.get("run", Mode.fresh()).duplicate(true)
+	restored.run.wins = int(restored.run.wins)
+	restored.run.version = Mode.VERSION
 	restored.procedural = {}
 	for id in parser.data.get("procedural", {}):
 		restored.procedural[id] = normalize_recipe(id, parser.data.procedural[id])
+	if parser.data.version < VERSION and not restored.procedural.is_empty():
+		var previous_id: String = restored.procedural.keys()[0]
+		# Historical completions are not wins in a newly introduced run.
+		if previous_id in restored.completed_ids:
+			restored.run.credited_id = previous_id
+		if "Reflexivo" in str(restored.procedural[previous_id].puzzle.title):
+			restored.run.board_profile = "contradiction1"
 	for id in restored.boards:
 		for edge in restored.boards[id]:
 			restored.boards[id][edge] = int(restored.boards[id][edge])
@@ -175,3 +190,4 @@ func save_game(data: Dictionary, catalog: Array) -> bool:
 		last_error = "No se pudo guardar la partida."
 		return false
 	return true
+

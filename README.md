@@ -2,6 +2,9 @@
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
 
+**Candidata actual: 0.3.0 / código Android 3.** Añade nuevas series de Dificultad fija y Progresión automática; Continuar recupera modo, tablero y progreso juntos. Progresión ofrece tres tableros Directo, cuatro alternados Directo/Reflexivo y después Reflexivo continuo. El guardado actual es **v3**, compatible en lectura con v1/v2; abrir no reescribe la partida anterior. El siguiente guardado válido migra el contenido completo de forma atómica. Ver [H04: modos, migración y validación](docs/H04_PLAY_MODES.md). Las secciones H02/H03 siguientes describen entregas históricas.
+
+
 ## Abrir y jugar
 
 1. Instala Godot 4.x estándar (no necesita .NET).
@@ -87,3 +90,4 @@ Consulta [H03B1_HOME_NAVIGATION.md](docs/H03B1_HOME_NAVIGATION.md) para arquitec
 En **Partida libre**, elige **Directo** (deducciones locales) o **Reflexivo** (incluye contradicciones en el repertorio analizado). Son perfiles provisionales. Las partidas varían entre 5×5/10, 6×6/12 y 7×7/16; el tamaño no determina el desafío. Al resolver, **Siguiente tablero** continúa con otro procedural sin pasar por aprendizaje. El menú, Continuar, la protección de progreso y el guardado v1/v2 se conservan.
 
 [Informe técnico y funcional, evidencia visual y validación](docs/FREE_PLAY_DELIVERY.md). La APK de revisión y su SHA se publican en la [incidencia #8](https://github.com/BenJackson66/Hashi-/issues/8); la instalación y el tacto Android no están validados por las pruebas de escritorio.
+

@@ -3,6 +3,7 @@ const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Board = preload("res://scripts/hashi_board.gd")
 const Session = preload("res://scripts/hashi_session.gd")
+const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Settings = preload("res://scripts/hashi_free_settings.gd")
 const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
@@ -17,6 +18,9 @@ var _confirmation_origin := "home"
 var puzzles: Array = []
 var board: Board
 var session: Session
+var mode_status: Label
+var _pending_run: Dictionary = {}
+var _request_run: Dictionary = {}
 var status: Label
 var selector: OptionButton
 var undo_button: Button
@@ -76,6 +80,10 @@ func _ready() -> void:
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(hint)
+	mode_status = Label.new()
+	mode_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mode_status.add_theme_font_size_override("font_size", 14)
+	column.add_child(mode_status)
 	board = Board.new()
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(200, 200)
@@ -113,7 +121,8 @@ func _ready() -> void:
 	home.challenge.select(0 if settings.profile == "local" else 1)
 	home.profile_requested.connect(_choose_profile)
 	home.continue_requested.connect(_continue_game)
-	home.new_requested.connect(_ask_new_puzzle)
+	home.new_requested.connect(func(): _ask_mode("free", settings.profile))
+	home.mode_requested.connect(_ask_mode)
 	home.lesson_requested.connect(_select_puzzle)
 	home.confirm_requested.connect(_confirm_new_puzzle)
 	home.cancel_requested.connect(_cancel_new_puzzle)
@@ -142,6 +151,10 @@ func _display_current() -> void:
 	_update_status("")
 
 func _select_puzzle(index: int) -> void:
+	if save_failed:
+		_save_game()
+		if save_failed:
+			return
 	if index < 0 or index >= session.catalog.size():
 		return
 	if index != session.current_index or not _has_game:
@@ -202,9 +215,19 @@ func _continue_game() -> void:
 	if _has_game:
 		_open_game()
 
-func _ask_new_puzzle() -> void:
+func _ask_mode(mode: String, profile: String) -> void:
+	if mode not in Mode.MODES or profile not in Mode.PROFILES:
+		return
+	_ask_new_puzzle(Mode.fresh(mode, profile))
+
+func _ask_new_puzzle(requested_run: Dictionary = {}) -> void:
 	if generation_task != null or _confirmation_pending or is_queued_for_deletion():
 		return
+	if save_failed:
+		_save_game()
+		if save_failed:
+			return
+	_pending_run = requested_run.duplicate(true) if not requested_run.is_empty() else session.run.duplicate(true)
 	for id in session.procedural:
 		var previous := Puzzle.new(session.procedural[id].puzzle)
 		previous.bridges = session.boards.get(id, {}).duplicate(true)
@@ -223,6 +246,7 @@ func _cancel_new_puzzle() -> void:
 	if not _confirmation_pending:
 		return
 	_confirmation_pending = false
+	_pending_run = {}
 	if _confirmation_origin == "game":
 		_open_game()
 	else:
@@ -231,16 +255,17 @@ func _cancel_new_puzzle() -> void:
 func _confirm_new_puzzle() -> void:
 	if not _confirmation_pending:
 		return
+	var intended_run := _pending_run.duplicate(true)
 	_cancel_new_puzzle()
+	_pending_run = intended_run
 	_request_new_puzzle()
 
 func _on_puzzle_changed() -> void:
 	_invalidate_generation()
-	if session.capture(board.puzzle):
-		_save_game()
+	_save_game()
 
 func _save_game() -> void:
-	save_failed = not session.save_game()
+	save_failed = not session.capture_and_save(board.puzzle)
 	_has_game = true
 	_update_status("")
 
@@ -267,9 +292,11 @@ func _update_status(message: String) -> void:
 	var solved := Rules.is_solved(board.puzzle)
 	undo_button.disabled = board.history.past.is_empty()
 	redo_button.disabled = board.history.future.is_empty()
-	next_button.disabled = not solved or generation_task != null
+	next_button.disabled = not solved or generation_task != null or save_failed
 	next_button.text = "Siguiente tablero" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
-	new_board_button.disabled = generation_task != null
+	new_board_button.disabled = generation_task != null or save_failed
+	mode_status.visible = session.is_procedural()
+	mode_status.text = Mode.description(session.run)
 	_sync_selector()
 	if solved:
 		if session.is_procedural():
@@ -303,6 +330,8 @@ func _sync_selector() -> void:
 	for i in session.catalog.size():
 		var definition: Dictionary = session.catalog[i]
 		var title := "%d · %s" % [i + 1, definition.title] if i < session.base_catalog.size() else str(definition.title)
+		if i >= session.base_catalog.size() and session.run.mode != "free":
+			title = ("Fija" if session.run.mode == "fixed" else "Progresión") + " · " + ("Directo" if session.run.board_profile == "local" else "Reflexivo")
 		selector.set_item_text(i, title + (" ✓" if str(definition.id) in session.completed_ids else ""))
 	selector.select(session.current_index)
 
@@ -325,7 +354,10 @@ func _request_new_puzzle() -> bool:
 	_generation_message = ""
 	generation_task = GenerationTask.new()
 	var excluded_id := str(session.procedural.keys()[0]) if not session.procedural.is_empty() else ""
-	if not generation_task.start_free(seed_value, settings.profile, generation_options, excluded_id):
+	_request_run = _pending_run.duplicate(true) if not _pending_run.is_empty() else session.run.duplicate(true)
+	_pending_run = {}
+	_request_run.board_profile = Mode.next_profile(_request_run, settings.profile)
+	if not generation_task.start_free(seed_value, _request_run.board_profile, generation_options, excluded_id):
 		generation_task = null
 		_generation_message = "No se pudo iniciar la generación. Inténtalo de nuevo."
 		_update_status("")
@@ -352,7 +384,7 @@ func _process(_delta: float) -> void:
 	if result.status != "success":
 		_generation_message = "No se pudo generar un tablero. Inténtalo de nuevo."
 		_update_status("")
-	elif session.install_procedural_and_save(result.recipe):
+	elif session.install_procedural_and_save(result.recipe, _request_run):
 		save_failed = false
 		_has_game = true
 		_display_current()
@@ -367,3 +399,4 @@ func _exit_tree() -> void:
 	if generation_task != null:
 		generation_task.finish_on_shutdown()
 		generation_task = null
+
