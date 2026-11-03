@@ -133,7 +133,7 @@ func test_migration() -> void:
 	check(session.completed_ids == ["h01_1"] and session.procedural.is_empty(), "legacy progress retained")
 	check(JSON.parse_string(FileAccess.get_file_as_string(path)).version == 1, "read-only recovery does not overwrite legacy file")
 	check(session.save_game(), "migration writes v2 at same path")
-	check(JSON.parse_string(FileAccess.get_file_as_string(path)).version == 2, "new payload is versioned v2")
+	check(JSON.parse_string(FileAccess.get_file_as_string(path)).version == Store.VERSION, "new payload uses current save version")
 	var again := Session.new(catalog, path)
 	check(again.restore() and again.snapshot_data() == session.snapshot_data(), "migrated save reopens exactly")
 
@@ -305,3 +305,4 @@ func touch(board: Control, point: Vector2, pressed: bool) -> void:
 	event.position = point
 	event.pressed = pressed
 	board._gui_input(event)
+

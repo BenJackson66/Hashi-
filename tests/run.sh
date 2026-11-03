@@ -22,4 +22,7 @@ timeout 30s godot --headless --path . --script tests/home_navigation.gd
 python3 tools/research/export_profile_oracle.py "$test_dir/profile-oracle.json"
 timeout 30s godot --headless --path . --script tests/logical_profile.gd -- "$test_dir/profile-oracle.json"
 timeout 60s godot --headless --path . --script tests/free_play.gd
+timeout 60s godot --headless --path . --script tests/play_modes.gd
+timeout 60s godot --headless --path . --script tests/mode_stage_boundaries.gd
 python3 tests/signing_security.py
+

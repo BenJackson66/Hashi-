@@ -6,7 +6,10 @@ signal lesson_requested(index: int)
 signal confirm_requested
 signal cancel_requested
 signal profile_requested(profile: String)
+signal mode_requested(mode: String, profile: String)
 signal page_changed
+var fixed_button: Button
+var progression_button: Button
 var challenge: OptionButton
 var scroll: ScrollContainer
 var page := "home"
@@ -50,8 +53,11 @@ func build(catalog: Array) -> void:
 	challenge.add_item("Reflexivo · por contradicción")
 	challenge.item_selected.connect(func(index: int): profile_requested.emit("local" if index == 0 else "contradiction1"))
 	pages.home.add_child(challenge)
-	_label("Perfiles provisionales para el próximo tablero. Varían las formas y conexiones; no son dificultades humanas validadas.", pages.home, 16)
+	_label("Directo: deducciones paso a paso. Reflexivo: explora posibilidades y descarta contradicciones.", pages.home, 16)
 	new_button = _button("Nuevo tablero", pages.home, func(): new_requested.emit())
+	fixed_button = _button("Nueva serie · Dificultad fija", pages.home, func(): mode_requested.emit("fixed", "local" if challenge.selected == 0 else "contradiction1"))
+	progression_button = _button("Nueva serie · Progresión", pages.home, func(): mode_requested.emit("progression", "local"))
+	_label("Continuar retoma tu serie. Una nueva serie empieza desde cero. Fija mantiene el perfil elegido; Progresión avanza de Directo a Reflexivo.", pages.home, 16)
 	learn_button = _button("Aprender a jugar", pages.home, func(): show_page("learn"))
 	rules_button = _button("Cómo jugar", pages.home, func(): show_page("rules"))
 	_label("Aprender a jugar", pages.learn, 24)
@@ -88,6 +94,8 @@ func update_state(can_continue: bool, busy: bool, message: String) -> void:
 	continue_button.disabled = not can_continue
 	new_button.disabled = busy
 	challenge.disabled = busy
+	fixed_button.disabled = busy
+	progression_button.disabled = busy
 	notice.text = message
 	if message.is_empty() and not can_continue and page == "home":
 		notice.text = "Aún no tienes una partida. Crea un tablero o elige uno para aprender."
@@ -110,3 +118,4 @@ func _button(text: String, parent: Control, callback: Callable) -> Button:
 	button.pressed.connect(callback)
 	parent.add_child(button)
 	return button
+
