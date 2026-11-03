@@ -63,7 +63,8 @@ jobs:
           previous="$RUNNER_TEMP/hashi-previous"
           mkdir -p "$previous"
           if gh run download 40225429852 --pattern 'hashi-h01-debug-arm64-7' --dir "$previous" > "$RUNNER_TEMP/hashi-download.log" 2>&1; then
-            python3 tools/ci/apk-signing.py --apksigner "$ANDROID_HOME/build-tools/36.1.0/apksigner" compare "$previous/hashi-h01-debug-arm64.apk" build/android/hashi-h01-debug-arm64.apk
+            previous_apk="$(python3 -c 'import pathlib,sys; files=list(pathlib.Path(sys.argv[1]).rglob("hashi-h01-debug-arm64.apk")); assert len(files)==1, "Expected exactly one historical APK"; print(files[0])' "$previous")"
+            python3 tools/ci/apk-signing.py --apksigner "$ANDROID_HOME/build-tools/36.1.0/apksigner" compare "$previous_apk" build/android/hashi-h01-debug-arm64.apk
             echo 'VERIFIED: same signing certificate as approved H02-C run 40225429852.' > build/android/historical-identity.txt
           else
             echo 'UNAVAILABLE: previous artifact not downloadable; current APK certificate verified against the persistent signing keystore.' > build/android/historical-identity.txt
