@@ -14,8 +14,9 @@ func run() -> void:
 	await process_frame
 	var writing := "--write" in OS.get_cmdline_user_args()
 	var valid := true
+	var starts_at_home: bool = ui.screen == "home" and ui.home.visible and not ui.game_view.visible
 	if writing:
-		ui.new_board_button.pressed.emit()
+		ui.home.new_button.pressed.emit()
 		var deadline := Time.get_ticks_msec() + 5000
 		while ui.generation_task != null and Time.get_ticks_msec() < deadline:
 			await process_frame
@@ -31,6 +32,7 @@ func run() -> void:
 			ui._select_puzzle(3)
 			valid = Store.new("user://h02c-process-expected.json").save_game(ui.session.snapshot_data(), catalog)
 	else:
+		ui.home.continue_button.pressed.emit()
 		var expected := Store.new("user://h02c-process-expected.json").load_game(catalog)
 		valid = not expected.is_empty() and ui.session.snapshot_data() == expected and ui.session.is_procedural() and ui.selector.selected == 3 and ui.generation_task == null
 		if valid:
@@ -40,7 +42,7 @@ func run() -> void:
 			ui.undo_button.pressed.emit()
 			valid = ui.board.puzzle.bridges == original
 	var snapshot: Dictionary = ui.session.snapshot_data()
-	valid = valid and not ui.save_failed and ui.board.puzzle.bridges.size() == 1 and ui.board.puzzle.bridges.values()[0] == 1 and not JSON.stringify(snapshot).contains('"solution"') and not JSON.stringify(snapshot).contains('"construction_solution"')
+	valid = valid and starts_at_home and ui.screen == "game" and not ui.save_failed and ui.board.puzzle.bridges.size() == 1 and ui.board.puzzle.bridges.values()[0] == 1 and not JSON.stringify(snapshot).contains('"solution"') and not JSON.stringify(snapshot).contains('"construction_solution"')
 	ui.queue_free()
 	await process_frame
 	print("PROCEDURAL RELAUNCH ", "write" if writing else "read", ": ", "PASS" if valid else "FAIL")

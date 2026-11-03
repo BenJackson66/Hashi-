@@ -1,0 +1,35 @@
+{
+  "policy": "free-play-1",
+  "profiles": {
+    "contradiction1": {
+      "distinct_clues": 50,
+      "evaluation_total_ms": 3020.478,
+      "layouts": [
+        "5x5/10",
+        "7x7/16",
+        "6x6/12"
+      ],
+      "max_selection_ms": 267.611,
+      "mean_candidates": 7.36,
+      "mean_selection_ms": 52.37442,
+      "p95_selection_ms": 121.961,
+      "requested": 50,
+      "successes": 50
+    },
+    "local": {
+      "distinct_clues": 50,
+      "evaluation_total_ms": 571.903,
+      "layouts": [
+        "6x6/12",
+        "7x7/16",
+        "5x5/10"
+      ],
+      "max_selection_ms": 32.757,
+      "mean_candidates": 1.14,
+      "mean_selection_ms": 8.15946,
+      "p95_selection_ms": 28.256,
+      "requested": 50,
+      "successes": 50
+    }
+  }
+}

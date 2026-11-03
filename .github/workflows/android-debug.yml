@@ -2,9 +2,15 @@ name: Android Debug APK
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "review-free-play-v*"
 
 permissions:
   contents: read
+  actions: read
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: android-debug-${{ github.ref }}
@@ -14,7 +20,7 @@ jobs:
   build:
     name: Godot 4.6.3 · ARM64 debug
     # Allow main and the reviewed development branches.
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/h01-prototipo' || github.ref == 'refs/heads/feature/h02a-continuidad' || github.ref == 'refs/heads/feature/android-persistent-signing' || github.ref == 'refs/heads/feature/h02-c-playable-generation'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/h03-b1-home-navigation' || startsWith(github.ref, 'refs/tags/review-free-play-v')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -49,7 +55,23 @@ jobs:
           HASHI_SIGNING_KEYSTORE_BASE64: ${{ secrets.HASHI_SIGNING_KEYSTORE_BASE64 }}
           HASHI_SIGNING_PASSWORD: ${{ secrets.HASHI_SIGNING_PASSWORD }}
         run: ./tools/ci/export-android.sh
+      - name: Compare identity with approved H02-C APK when retained
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          previous="$RUNNER_TEMP/hashi-previous"
+          mkdir -p "$previous"
+          if gh run download 40225429852 --pattern 'hashi-h01-debug-arm64-7' --dir "$previous" > "$RUNNER_TEMP/hashi-download.log" 2>&1; then
+            previous_apk="$(python3 -c 'import pathlib,sys; files=list(pathlib.Path(sys.argv[1]).rglob("hashi-h01-debug-arm64.apk")); assert len(files)==1, "Expected exactly one historical APK"; print(files[0])' "$previous")"
+            python3 tools/ci/apk-signing.py --apksigner "$ANDROID_HOME/build-tools/36.1.0/apksigner" compare "$previous_apk" build/android/hashi-h01-debug-arm64.apk
+            echo 'VERIFIED: same signing certificate as approved H02-C run 40225429852.' > build/android/historical-identity.txt
+          else
+            echo 'UNAVAILABLE: previous artifact not downloadable; current APK certificate verified against the persistent signing keystore.' > build/android/historical-identity.txt
+            echo '::warning::Historical certificate comparison unavailable; see historical-identity.txt.'
+          fi
       - name: Upload debug APK and verification
+        id: apk
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: hashi-h01-debug-arm64-${{ github.run_number }}
@@ -58,6 +80,7 @@ jobs:
             build/android/SHA256SUMS.txt
             build/android/apk-verification.txt
             build/android/signing-certificate-sha256.txt
+            build/android/historical-identity.txt
           if-no-files-found: error
           retention-days: 14
       - name: Report result
@@ -66,6 +89,35 @@ jobs:
             echo '### Hashi Android debug APK'
             echo "Commit: $GITHUB_SHA"
             echo 'APK: hashi-h01-debug-arm64.apk (ARM64, Android 7.0/API 24+)'
+            echo 'Version: 0.2.0 / versionCode 2; package org.hashi.prototype'
             echo 'Signature, alignment, manifest and packaged data checked.'
+            echo 'Public signing certificate SHA-256:'
+            cat build/android/signing-certificate-sha256.txt
+            cat build/android/SHA256SUMS.txt
+            cat build/android/historical-identity.txt
             echo 'No device installation or gameplay test was performed by this workflow.'
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish concrete review to issue 8 and PR 7
+        if: startsWith(github.ref, 'refs/tags/review-free-play-v')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          APK_ARTIFACT_URL: ${{ steps.apk.outputs.artifact-url }}
+        run: |
+          python3 tools/ci/report-review.py
+          gh api --method POST "repos/$GH_REPO/issues/8/comments" --input build/android/review-comment.json --jq .html_url
+          # Only update the existing PR if it still contains exactly this build.
+          head_sha="$(gh api "repos/$GH_REPO/pulls/7" --jq .head.sha)"
+          if [[ "$head_sha" == "$GITHUB_SHA" ]]; then
+            gh api --method PATCH "repos/$GH_REPO/pulls/7" --input build/android/review-pr.json --jq .html_url
+          fi
+      - name: Report failed review build to coordination
+        if: failure() && startsWith(github.ref, 'refs/tags/review-free-play-v')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 tools/ci/report-review.py --failure
+          gh api --method POST "repos/$GH_REPO/issues/8/comments" --input build/android/review-comment.json --jq .html_url
