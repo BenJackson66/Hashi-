@@ -1,4 +1,4 @@
-# Hashi — inicio, aprendizaje y tableros procedurales
+# Hashi — partida libre y desafíos provisionales
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
 
@@ -6,7 +6,7 @@ Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador 
 
 1. Instala Godot 4.x estándar (no necesita .NET).
 2. Importa `project.godot` desde el gestor de proyectos y pulsa **F6/F5** para ejecutar la escena/proyecto. La escena principal es `scenes/main.tscn`.
-3. La aplicación abre en **Inicio**. Usa **Continuar partida** para recuperar la última selección, **Aprender a jugar** para elegir cualquiera de los tres tableros, **Cómo jugar** para consultar las reglas o **Nuevo tablero** para generar un procedural 5×5 de 10 islas en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
+3. La aplicación abre en **Inicio**. Usa **Continuar partida** para recuperar la última selección, **Aprender a jugar** para elegir cualquiera de los tres tableros, **Cómo jugar** para consultar las reglas o **Nuevo tablero** para generar un procedural variado del perfil elegido en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
 4. Cada gesto alterna **0 → 1 → 2 → 0** puentes. Los puentes deben unir vecinos horizontales/verticales y nunca cruzarse ni atravesar islas.
 5. Completa el número de cada isla y conecta toda la red para obtener la victoria. **Reiniciar** borra los puentes del tablero actual y se puede deshacer. Cambiar de tablero conserva los puentes de cada nivel.
 
@@ -81,3 +81,9 @@ Se guardan pistas, receta y puentes en formato v2 de `user://hashi-save-v1.json`
 **Inicio** vuelve al menú conservando el tablero y su historial en memoria. **Continuar partida** abre la última selección sin reiniciarla. Los tres tableros de **Aprender a jugar** y el procedural conservan sus propios puentes. Antes de sustituir un procedural con puentes sin resolver se pide confirmación; cancelar no cambia la partida. Un fallo de generación o guardado conserva el estado anterior. No cambia el archivo/formato v1/v2.
 
 Consulta [H03B1_HOME_NAVIGATION.md](docs/H03B1_HOME_NAVIGATION.md) para arquitectura, casos de regresión, resultados y pasos de validación manual. No se ha compilado una APK para H03-B1 ni se ha validado su interfaz en un dispositivo físico.
+
+## Entrega jugable 0.2.0
+
+En **Partida libre**, elige **Directo** (deducciones locales) o **Reflexivo** (incluye contradicciones en el repertorio analizado). Son perfiles provisionales. Las partidas varían entre 5×5/10, 6×6/12 y 7×7/16; el tamaño no determina el desafío. Al resolver, **Siguiente tablero** continúa con otro procedural sin pasar por aprendizaje. El menú, Continuar, la protección de progreso y el guardado v1/v2 se conservan.
+
+[Informe técnico y funcional, evidencia visual y validación](docs/FREE_PLAY_DELIVERY.md). La APK de revisión y su SHA se publican en la [incidencia #8](https://github.com/BenJackson66/Hashi-/issues/8); la instalación y el tacto Android no están validados por las pruebas de escritorio.

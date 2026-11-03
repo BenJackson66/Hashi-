@@ -3,8 +3,10 @@ const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Rules = preload("res://scripts/hashi_rules.gd")
 const Board = preload("res://scripts/hashi_board.gd")
 const Session = preload("res://scripts/hashi_session.gd")
+const Settings = preload("res://scripts/hashi_free_settings.gd")
 const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
+var settings: Settings
 var home: Home
 var game_view: MarginContainer
 var home_button: Button
@@ -36,10 +38,13 @@ var save_failed := false
 
 func _ready() -> void:
 	set_process(false)
+	get_tree().quit_on_go_back = false
 	_seed_rng.randomize()
 	puzzles = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
 	session = Session.new(puzzles, save_path)
 	_has_game = session.restore()
+	settings = Settings.new(save_path + ".preferences")
+	settings.restore()
 	if not session.procedural.is_empty():
 		_last_requested_seed = str(session.procedural.values()[0].seed).to_int()
 	var recovery_message := session.store.last_error
@@ -105,6 +110,8 @@ func _ready() -> void:
 	home = Home.new()
 	add_child(home)
 	home.build(puzzles)
+	home.challenge.select(0 if settings.profile == "local" else 1)
+	home.profile_requested.connect(_choose_profile)
 	home.continue_requested.connect(_continue_game)
 	home.new_requested.connect(_ask_new_puzzle)
 	home.lesson_requested.connect(_select_puzzle)
@@ -150,8 +157,17 @@ func _select_puzzle(index: int) -> void:
 func _next_puzzle() -> void:
 	if not Rules.is_solved(board.puzzle):
 		return
-	var index := 0 if session.is_procedural() else session.sequence.ids.find(session.sequence.next_id(board.puzzle.puzzle_id))
-	_select_puzzle(index)
+	if session.is_procedural():
+		_ask_new_puzzle()
+	else:
+		_select_puzzle(session.sequence.ids.find(session.sequence.next_id(board.puzzle.puzzle_id)))
+
+func _choose_profile(profile: String) -> void:
+	if generation_task != null:
+		return
+	if not settings.choose(profile):
+		_generation_message = "La preferencia se aplica en esta sesión, pero no se pudo guardar."
+	_update_status("")
 
 func _show_home() -> void:
 	_confirmation_pending = false
@@ -229,6 +245,18 @@ func _save_game() -> void:
 	_update_status("")
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST and home != null:
+		if _confirmation_pending:
+			_cancel_new_puzzle()
+		elif screen == "game":
+			_show_home()
+		elif home.page != "home":
+			home.show_page("home")
+		else:
+			if save_failed:
+				_save_game()
+			get_tree().quit()
+		return
 	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_CLOSE_REQUEST]:
 		# Successful changes are already flushed. Retry only a pending failure;
 		# opening/focusing a bad save must not silently replace it with an empty one.
@@ -239,8 +267,8 @@ func _update_status(message: String) -> void:
 	var solved := Rules.is_solved(board.puzzle)
 	undo_button.disabled = board.history.past.is_empty()
 	redo_button.disabled = board.history.future.is_empty()
-	next_button.disabled = not solved
-	next_button.text = "Volver al primero" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
+	next_button.disabled = not solved or generation_task != null
+	next_button.text = "Siguiente tablero" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
 	new_board_button.disabled = generation_task != null
 	_sync_selector()
 	if solved:
@@ -274,7 +302,7 @@ func _sync_selector() -> void:
 			selector.add_item(str(definition.title))
 	for i in session.catalog.size():
 		var definition: Dictionary = session.catalog[i]
-		var title := "%d · %s" % [i + 1, definition.title] if i < session.base_catalog.size() else "Procedural"
+		var title := "%d · %s" % [i + 1, definition.title] if i < session.base_catalog.size() else str(definition.title)
 		selector.set_item_text(i, title + (" ✓" if str(definition.id) in session.completed_ids else ""))
 	selector.select(session.current_index)
 
@@ -296,7 +324,8 @@ func _request_new_puzzle() -> bool:
 	_request_epoch = _generation_epoch
 	_generation_message = ""
 	generation_task = GenerationTask.new()
-	if not generation_task.start(seed_value, generation_options):
+	var excluded_id := str(session.procedural.keys()[0]) if not session.procedural.is_empty() else ""
+	if not generation_task.start_free(seed_value, settings.profile, generation_options, excluded_id):
 		generation_task = null
 		_generation_message = "No se pudo iniciar la generación. Inténtalo de nuevo."
 		_update_status("")

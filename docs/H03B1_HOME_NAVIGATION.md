@@ -1,5 +1,7 @@
 # H03-B1 — Inicio y navegación
 
+Documento histórico de la base revisada. La [entrega agrupada 0.2.0](FREE_PLAY_DELIVERY.md) añade variedad, perfiles provisionales y siguiente procedural directo, sustituyendo el comportamiento de retorno al primero descrito aquí.
+
 Base: `main` en `01c5844`. Motor de validación: Godot 4.6.3 estable oficial. PR independiente; sin compilación APK ni fusión.
 
 ## Comportamiento

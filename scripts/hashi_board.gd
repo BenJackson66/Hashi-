@@ -64,7 +64,7 @@ func _layout_islands() -> void:
 		extent = extent.max(Rules.position(item))
 	var margin := 36.0
 	var step := minf(maxf(1.0, size.x - margin * 2.0) / extent.x, maxf(1.0, size.y - margin * 2.0) / extent.y)
-	radius = minf(25.0, step * 0.31)
+	radius = minf(25.0, step * 0.40)
 	var offset := (size - extent * step) / 2.0
 	for item in puzzle.islands:
 		centers[str(item.id)] = offset + Rules.position(item) * step
@@ -95,7 +95,7 @@ func _draw() -> void:
 			fill = Color("a33e51")
 		draw_circle(point, radius, fill)
 		draw_arc(point, radius, 0, TAU, 48, Color("f4cf79") if selected == id else Color("aac4d1"), 2.5, true)
-		var text := str(item.target)
+		var text := str(int(item.target))
 		var font_size := int(minf(25, radius * 1.05))
 		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		draw_string(font, point + Vector2(-width / 2, font_size * 0.35), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)

@@ -5,7 +5,9 @@ signal new_requested
 signal lesson_requested(index: int)
 signal confirm_requested
 signal cancel_requested
+signal profile_requested(profile: String)
 signal page_changed
+var challenge: OptionButton
 var scroll: ScrollContainer
 var page := "home"
 var pages: Dictionary = {}
@@ -40,6 +42,15 @@ func build(catalog: Array) -> void:
 		content.add_child(column)
 		pages[name] = column
 	continue_button = _button("Continuar partida", pages.home, func(): continue_requested.emit())
+	_label("Partida libre", pages.home, 22)
+	challenge = OptionButton.new()
+	challenge.custom_minimum_size.y = 56
+	challenge.add_theme_font_size_override("font_size", 18)
+	challenge.add_item("Directo · deducción local")
+	challenge.add_item("Reflexivo · por contradicción")
+	challenge.item_selected.connect(func(index: int): profile_requested.emit("local" if index == 0 else "contradiction1"))
+	pages.home.add_child(challenge)
+	_label("Perfiles provisionales para el próximo tablero. Varían las formas y conexiones; no son dificultades humanas validadas.", pages.home, 16)
 	new_button = _button("Nuevo tablero", pages.home, func(): new_requested.emit())
 	learn_button = _button("Aprender a jugar", pages.home, func(): show_page("learn"))
 	rules_button = _button("Cómo jugar", pages.home, func(): show_page("rules"))
@@ -76,9 +87,11 @@ func show_page(value: String) -> void:
 func update_state(can_continue: bool, busy: bool, message: String) -> void:
 	continue_button.disabled = not can_continue
 	new_button.disabled = busy
+	challenge.disabled = busy
 	notice.text = message
-	if message.is_empty() and not can_continue:
+	if message.is_empty() and not can_continue and page == "home":
 		notice.text = "Aún no tienes una partida. Crea un tablero o elige uno para aprender."
+	notice.visible = not notice.text.is_empty()
 
 func _label(text: String, parent: Control, font_size: int = 18) -> Label:
 	var label := Label.new()

@@ -15,6 +15,11 @@ from pathlib import Path
 apk = Path('build/android/hashi-h01-debug-arm64.apk')
 badging = Path('build/android/apk-verification.txt').read_text()
 assert "package: name='org.hashi.prototype'" in badging, 'Unexpected package ID'
+preset = Path('export_presets.cfg').read_text()
+version_code = re.search(r'^version/code=(\d+)$', preset, re.M).group(1)
+version_name = re.search(r'^version/name="([^"]+)"$', preset, re.M).group(1)
+assert f"versionCode='{version_code}'" in badging, 'Version code differs from reviewed preset'
+assert f"versionName='{version_name}'" in badging, 'Version name differs from reviewed preset'
 assert "sdkVersion:'24'" in badging, 'Unexpected minimum Android API'
 assert "targetSdkVersion:'36'" in badging, 'Unexpected target Android API'
 assert "application-debuggable" in badging, 'Expected debug APK'
