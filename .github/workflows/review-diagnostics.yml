@@ -1,0 +1,21 @@
+name: Review build diagnostics
+on:
+  push:
+    tags:
+      - 'diagnose-free-play-*'
+permissions:
+  contents: read
+  actions: read
+  issues: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Diagnose failed build without compiling an APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/diagnose-review.py
