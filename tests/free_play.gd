@@ -19,6 +19,13 @@ func wait_ui(ui: Control) -> void:
 	while ui.generation_task != null and Time.get_ticks_msec() < deadline:
 		await process_frame
 	check(ui.generation_task == null, "bounded worker terminates")
+func settle_quality(ui: Control) -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not ui.session.quality.pending.is_empty() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	if not ui.session.quality.pending.is_empty():
+		check(false, "quality decision settles before next UI action")
+
 func run() -> void:
 	var report: Dictionary = {"policy": Policy.VERSION, "profiles": {}}
 	for profile in Policy.LABELS:
@@ -86,6 +93,7 @@ func test_ui() -> void:
 		var ids: PackedStringArray = edge.split(":")
 		for count in int(solved.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
+			await settle_quality(ui)
 	check(not ui.next_button.disabled and ui.next_button.text == "Siguiente tablero", "victory enables direct next")
 	var before: Dictionary = ui.session.snapshot_data()
 	var bytes := FileAccess.get_file_as_string(ui.save_path)

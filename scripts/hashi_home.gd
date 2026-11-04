@@ -10,6 +10,7 @@ signal profile_requested(profile: String)
 signal mode_requested(mode: String, profile: String)
 signal page_changed
 var story_button: Button
+var iron_button: Button
 var fixed_button: Button
 var progression_button: Button
 var challenge: OptionButton
@@ -61,6 +62,8 @@ func build(catalog: Array) -> void:
 	fixed_button = _button("Nueva serie · Dificultad fija", pages.home, func(): mode_requested.emit("fixed", "local" if challenge.selected == 0 else "contradiction1"))
 	progression_button = _button("Nueva serie · Progresión", pages.home, func(): mode_requested.emit("progression", "local"))
 	_label("Continuar retoma tu serie. Una nueva serie empieza desde cero. Fija mantiene el perfil elegido; Progresión avanza de Directo a Reflexivo.", pages.home, 16)
+	iron_button = _button("Nuevo desafío · Alma de Hierro", pages.home, func(): mode_requested.emit("iron", "local" if challenge.selected == 0 else "contradiction1"))
+	_label("Alma: una falta termina el desafío; conserva tu récord. Rachas en todos los modos: azul desde 1 perfecto, morado desde 3 y dorado desde 7. Deshacer, retirar puentes o dejar el tablero sin solución rompe la racha.", pages.home, 16)
 	learn_button = _button("Aprender a jugar", pages.home, func(): show_page("learn"))
 	rules_button = _button("Cómo jugar", pages.home, func(): show_page("rules"))
 	_label("Aprender a jugar", pages.learn, 24)
@@ -77,6 +80,7 @@ func build(catalog: Array) -> void:
 	_label("4. Todas las islas deben quedar conectadas en una sola red. Completar los números en grupos separados no resuelve el tablero.", pages.rules)
 	_label("Toca dos islas o desliza de una a otra para alternar 0 → 1 → 2 → 0. Puedes Deshacer y Rehacer. Las advertencias son opcionales.", pages.rules)
 	_label("Historia · Azules (S): solo puentes simples, y el número cuenta todos los puentes. Misteriosas (?): no tienen número; deduce sus conexiones con las otras islas y une toda la red.", pages.rules)
+	_label("Rachas: cada tablero perfecto cuenta una sola vez. Azul: 1, morado: 3, dorado: 7. Deshacer, retirar/reducir puentes o dejar un tablero sin extensión posible rompe la racha. En modos normales conservas tu progreso; en Alma de Hierro la primera falta termina el desafío y conserva el récord.", pages.rules)
 	rules_back_button = _button("Volver a Inicio", pages.rules, func(): show_page("home"))
 	_label("¿Sustituir el tablero procedural?", pages.confirm, 24)
 	_label("El procedural anterior tiene puentes y aún no está resuelto. Si el nuevo se genera y se guarda correctamente, sustituirá ese progreso. Los tres tableros de aprendizaje se conservan.", pages.confirm)
@@ -94,12 +98,15 @@ func show_page(value: String) -> void:
 		pages[name].visible = name == page
 	page_changed.emit()
 
-func update_state(can_continue: bool, busy: bool, message: String) -> void:
+func update_state(can_continue: bool, busy: bool, message: String, selection_blocked: bool = false) -> void:
 	continue_button.disabled = not can_continue
 	new_button.disabled = busy
 	challenge.disabled = busy
 	fixed_button.disabled = busy
 	progression_button.disabled = busy
+	iron_button.disabled = busy
+	for lesson in lesson_buttons:
+		lesson.disabled = selection_blocked
 	notice.text = message
 	if message.is_empty() and not can_continue and page == "home":
 		notice.text = "Aún no tienes una partida. Crea un tablero o elige uno para aprender."

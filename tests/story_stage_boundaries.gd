@@ -16,10 +16,10 @@ func verify(condition: bool, label: String) -> void:
 		failures += 1
 		printerr("MINERVA STORY FAIL: ", label)
 func settle_worker() -> void:
-	var deadline := Time.get_ticks_msec() + 12000
-	while ui.generation_task != null and Time.get_ticks_msec() < deadline:
+	var deadline := Time.get_ticks_msec() + 15000
+	while (ui.generation_task != null or not ui.session.quality.pending.is_empty()) and Time.get_ticks_msec() < deadline:
 		await process_frame
-	verify(ui.generation_task == null, "bounded story worker")
+	verify(ui.generation_task == null and ui.session.quality.pending.is_empty(), "bounded story worker")
 func reopen() -> void:
 	var before: Dictionary = ui.session.snapshot_data()
 	ui.queue_free()
@@ -39,6 +39,7 @@ func solve_board() -> void:
 		var ends: PackedStringArray = str(edge).split(":")
 		for repetition in int(solution.solutions[0][edge]):
 			ui.board._connect_islands(ends[0], ends[1])
+			await settle_worker()
 func review() -> void:
 	ui = Main.instantiate()
 	ui.save_path = "user://minerva-story.json"
@@ -50,6 +51,7 @@ func review() -> void:
 	await settle_worker()
 	var edges := Solver.candidate_edges(ui.board.puzzle)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_worker()
 	saved_run = ui.session.run.duplicate(true)
 	procedural_id = ui.board.puzzle.puzzle_id
 	procedural_bridges = ui.board.puzzle.bridges.duplicate(true)
@@ -64,10 +66,12 @@ func review() -> void:
 		if ordinal >= 12:
 			verify(ui.board.puzzle.puzzle_id not in generated_ids, "new continuation ID")
 			generated_ids.append(ui.board.puzzle.puzzle_id)
-		solve_board()
+		await solve_board()
 		verify(int(ui.session.story.frontier) == ordinal + 1, "one story credit")
 		ui.board.undo()
+		await settle_worker()
 		ui.board.redo()
+		await settle_worker()
 		verify(int(ui.session.story.frontier) == ordinal + 1, "no replay story credit")
 		verify(ui.session.run == saved_run and ui.session.boards[procedural_id] == procedural_bridges, "fixed run survives campaign")
 		verify(ui.session.story.recipes.size() <= 4, "bounded recent recipes")

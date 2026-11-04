@@ -162,6 +162,13 @@ func test_storage() -> void:
 	check(not Store.new("res://forbidden.json").save_game(data, catalog), "save restricted to user directory")
 	check(not Store.new("user://missing-directory/state.json").save_game(data, catalog), "unwritable destination reported")
 
+func settle_quality(ui: Control) -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not ui.session.quality.pending.is_empty() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	if not ui.session.quality.pending.is_empty():
+		check(false, "quality decision settles before next UI action")
+
 func test_ui() -> void:
 	var ui = Main.instantiate()
 	ui.save_path = "user://h02a-ui.json"
@@ -169,24 +176,35 @@ func test_ui() -> void:
 	await process_frame
 	check(ui.undo_button.disabled and ui.redo_button.disabled and ui.next_button.disabled, "initial buttons")
 	ui.board._connect_islands("0", "1")
+	await settle_quality(ui)
 	check(not ui.undo_button.disabled and ui.redo_button.disabled, "move enables undo")
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridges.is_empty() and not ui.redo_button.disabled, "undo button")
 	ui.redo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridge_count("0", "1") == 1, "redo button")
 	ui.board._connect_islands("0", "1")
+	await settle_quality(ui)
 	ui.board._connect_islands("1", "3")
+	await settle_quality(ui)
 	ui.board._connect_islands("1", "3")
+	await settle_quality(ui)
 	ui.board._connect_islands("2", "3")
+	await settle_quality(ui)
 	check(not ui.next_button.disabled and "resuelto" in ui.status.text, "discreet victory enables next")
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.next_button.disabled and not "resuelto" in ui.status.text, "undo removes victory")
 	ui.redo_button.pressed.emit()
+	await settle_quality(ui)
 	check(not ui.next_button.disabled, "redo restores victory")
 	ui.next_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.session.current_index == 1 and ui.selector.selected == 1, "next button selects next")
 	check(ui.board.history.past.is_empty(), "next clears history")
 	ui.board._connect_islands("0", "1")
+	await settle_quality(ui)
 	var bridges: Dictionary = ui.board.puzzle.bridges.duplicate()
 	ui.queue_free()
 	await process_frame
@@ -203,9 +221,11 @@ func test_ui() -> void:
 		var ids: PackedStringArray = edge.split(":")
 		for count in int(SOLUTIONS[2][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
+			await settle_quality(ui)
 	check(not ui.next_button.disabled and ui.next_button.text == "Volver al primero", "last board wraps explicitly")
 	check("provisional" in ui.status.text, "temporary sequence wording")
 	ui.next_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.session.current_index == 0, "last next returns first")
 	for dimensions in [Vector2i(360, 640), Vector2i(480, 800), Vector2i(720, 1280)]:
 		root.content_scale_size = dimensions
@@ -216,9 +236,11 @@ func test_ui() -> void:
 		var bottom: float = ui.next_button.global_position.y + ui.next_button.size.y
 		check(bottom <= root.size.y, "navigation stays on screen " + str(dimensions) + " bottom=" + str(bottom))
 	ui.restart_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridges.is_empty() and ui.next_button.disabled, "restart button clears victory")
 	ui.session.store.path = "user://missing-directory/ui.json"
 	ui.board._connect_islands("0", "1")
+	await settle_quality(ui)
 	check(ui.save_failed and "No se pudo guardar" in ui.status.text, "save failure reported without losing move")
 	ui.session.store.path = "user://h02a-retry.json"
 	ui._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
@@ -235,6 +257,7 @@ func test_ui() -> void:
 	ui._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(FileAccess.get_file_as_string(ui.save_path) == "{broken", "focus does not overwrite corrupt save")
 	ui.board._connect_islands("0", "1")
+	await settle_quality(ui)
 	check(not ui.session.store.load_game(catalog).is_empty(), "valid new action replaces corrupt save")
 	ui.queue_free()
 	await process_frame

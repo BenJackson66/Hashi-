@@ -5,6 +5,9 @@ const Rules = preload("res://scripts/hashi_rule_set.gd")
 const History = preload("res://scripts/hashi_history.gd")
 signal state_changed(message: String)
 signal puzzle_changed
+var last_action: Dictionary = {}
+var input_enabled := true
+var bridge_color := Color("aac4d1")
 var history := History.new()
 var puzzle: Puzzle
 var warnings_enabled := false
@@ -27,27 +30,32 @@ func set_puzzle(value: Puzzle) -> void:
 	queue_redraw()
 
 func reset() -> void:
-	if puzzle:
+	if puzzle and input_enabled:
 		var before := puzzle.bridges.duplicate(true)
 		puzzle.reset()
-		_finish_change(before)
+		_finish_change(before, "reset")
 
 func undo() -> void:
-	if puzzle and history.undo(puzzle):
-		_notify_change()
+	if puzzle and input_enabled:
+		var before := puzzle.bridges.duplicate(true)
+		if history.undo(puzzle):
+			_notify_change("undo", before)
 
 func redo() -> void:
-	if puzzle and history.redo(puzzle):
-		_notify_change()
+	if puzzle and input_enabled:
+		var before := puzzle.bridges.duplicate(true)
+		if history.redo(puzzle):
+			_notify_change("redo", before)
 
-func _finish_change(before: Dictionary) -> void:
+func _finish_change(before: Dictionary, kind: String = "move") -> void:
 	if history.record(before, puzzle.bridges):
-		_notify_change()
+		_notify_change(kind, before)
 	else:
 		selected = ""
 		queue_redraw()
 
-func _notify_change() -> void:
+func _notify_change(kind: String, before: Dictionary) -> void:
+	last_action = {"kind": kind, "before": before.duplicate(true), "bridges": puzzle.bridges.duplicate(true)}
 	selected = ""
 	pressed = ""
 	active_touch = -1
@@ -79,10 +87,10 @@ func _draw() -> void:
 		var b: Vector2 = centers[ids[1]]
 		var normal := (b - a).normalized().orthogonal() * 4.0
 		if int(puzzle.bridges[edge]) == 1:
-			draw_line(a, b, Color("86cddd"), 3.0, true)
+			draw_line(a, b, bridge_color, 3.0, true)
 		else:
-			draw_line(a + normal, b + normal, Color("86cddd"), 3.0, true)
-			draw_line(a - normal, b - normal, Color("86cddd"), 3.0, true)
+			draw_line(a + normal, b + normal, bridge_color, 3.0, true)
+			draw_line(a - normal, b - normal, bridge_color, 3.0, true)
 	var font := ThemeDB.fallback_font
 	for item in puzzle.islands:
 		var id := str(item.id)
@@ -124,6 +132,8 @@ func _release(point: Vector2) -> void:
 	queue_redraw()
 
 func _connect_islands(a: String, b: String) -> void:
+	if not input_enabled:
+		return
 	var before := puzzle.bridges.duplicate(true)
 	var error := Rules.cycle_bridge(puzzle, a, b)
 	_finish_change(before)
@@ -131,7 +141,7 @@ func _connect_islands(a: String, b: String) -> void:
 	state_changed.emit(error if warnings_enabled else "")
 
 func _gui_input(event: InputEvent) -> void:
-	if not puzzle:
+	if not puzzle or not input_enabled:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed and active_touch == -1:

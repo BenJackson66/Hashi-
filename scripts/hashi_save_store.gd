@@ -8,7 +8,8 @@ const Solver = preload("res://scripts/hashi_solver.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
-const VERSION := 5
+const Quality = preload("res://scripts/hashi_quality.gd")
+const VERSION := 6
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -19,7 +20,7 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or int(data.version) not in [1, 2, 3, 4, VERSION]:
+	if not _integer(data.version) or int(data.version) not in [1, 2, 3, 4, 5, VERSION]:
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
@@ -36,6 +37,8 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 		allowed.append("story")
 		if not Story.valid(data.get("story")):
 			return false
+	if data.version >= 6:
+		allowed.append("quality")
 	for field in data:
 		if field not in allowed:
 			return false
@@ -65,6 +68,12 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 			known[id] = recipe.puzzle
 		if Story.ordinal(data.story, data.current_puzzle_id) >= 0 and not Story.unlocked(data.story, data.current_puzzle_id):
 			return false
+	if data.version >= 6:
+		if not Quality.valid(data.get("quality"), known):
+			return false
+		for event in data.quality.pending:
+			if event.id != data.current_puzzle_id or not _valid_bridges(event.bridges, known[event.id]) or (event.iron and (data.run.mode != "iron" or not data.procedural.has(event.id))):
+				return false
 	if not known.has(data.current_puzzle_id) or not data.boards.has(data.current_puzzle_id):
 		return false
 	if data.boards.size() > known.size() or data.completed_ids.size() > known.size():
@@ -175,6 +184,16 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
+	restored.quality = parser.data.get("quality", Quality.fresh()).duplicate(true)
+	if parser.data.version < 6:
+		for id in parser.data.boards:
+			restored.quality.marks[id] = {"spoiled": true, "credited": id in parser.data.completed_ids}
+	for key in ["version", "streak", "best", "iron_record", "serial"]:
+		restored.quality[key] = int(restored.quality[key])
+	for event in restored.quality.pending:
+		event.serial = int(event.serial)
+		for edge in event.bridges:
+			event.bridges[edge] = int(event.bridges[edge])
 	restored.story = Story.migrate(parser.data.get("story", Story.fresh()))
 	for ordinal in restored.story.recipes:
 		var recipe: Dictionary = restored.story.recipes[ordinal]

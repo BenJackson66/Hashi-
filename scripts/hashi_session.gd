@@ -6,6 +6,7 @@ const Sequence = preload("res://scripts/hashi_sequence.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
+const Quality = preload("res://scripts/hashi_quality.gd")
 const Store = preload("res://scripts/hashi_save_store.gd")
 var base_catalog: Array
 var procedural: Dictionary = {}
@@ -17,6 +18,7 @@ var boards: Dictionary = {}
 var completed_ids: Array = []
 var run: Dictionary = Mode.fresh()
 var story: Dictionary = Story.fresh()
+var quality: Dictionary = Quality.fresh()
 
 func _init(definitions: Array = [], save_path: String = "user://hashi-save-v1.json") -> void:
 	base_catalog = definitions.duplicate(true)
@@ -35,6 +37,7 @@ func restore() -> bool:
 	catalog = base_catalog.duplicate(true)
 	for recipe in procedural.values():
 		catalog.append(recipe.puzzle.duplicate(true))
+	quality = data.quality.duplicate(true)
 	story = data.story.duplicate(true)
 	catalog.append_array(Story.definitions(story))
 	current_index = -1
@@ -90,6 +93,7 @@ func _staged() -> HashiSession:
 	staged.current_index = current_index
 	staged.run = run.duplicate(true)
 	staged.story = story.duplicate(true)
+	staged.quality = quality.duplicate(true)
 	return staged
 
 func _publish(staged: HashiSession) -> void:
@@ -100,30 +104,50 @@ func _publish(staged: HashiSession) -> void:
 	current_index = staged.current_index
 	run = staged.run
 	story = staged.story
+	quality = staged.quality
 
 func install_procedural_and_save(value: Dictionary, requested_run: Dictionary = {}) -> bool:
+	if not quality.pending.is_empty():
+		return false
 	var staged := _staged()
 	if not requested_run.is_empty():
 		staged.run = requested_run.duplicate(true)
+		if staged.run.mode == "iron":
+			staged.quality.iron_ended = false
 	if not staged.install_procedural(value):
 		store.last_error = "No se pudo validar el nuevo tablero."
 		return false
+	Quality.prune(staged.quality, staged.boards.keys())
 	if not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
 	_publish(staged)
 	return true
 
 func select_and_save(index: int) -> bool:
+	if not quality.pending.is_empty():
+		return false
 	var staged := _staged()
 	if not staged.select(index) or not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
 	_publish(staged)
 	return true
 
-func capture_and_save(puzzle: Puzzle) -> bool:
-	# Board, completion credit and run advance form one atomic snapshot.
+func capture_and_save(puzzle: Puzzle, actions: Array = [], verdict: Dictionary = {}) -> bool:
+	# Live Board, sticky faults, unresolved prefixes and victory are one transaction.
 	var staged := _staged()
-	if not staged.capture(puzzle) or not store.save_game(staged.snapshot_data(), base_catalog):
+	if not staged.capture(puzzle, false) or not Quality.resolve(staged.quality, verdict):
+		return false
+	var iron: bool = staged.is_procedural() and staged.run.mode == "iron"
+	var actual_actions := actions.duplicate(true)
+	if actual_actions.is_empty() and puzzle.bridges != boards.get(puzzle.puzzle_id, {}):
+		actual_actions.append({"kind": "move", "before": boards.get(puzzle.puzzle_id, {}).duplicate(true), "bridges": puzzle.bridges.duplicate(true)})
+	for event in actual_actions:
+		if not Quality.action(staged.quality, puzzle, event, iron):
+			return false
+	if staged.quality.pending.is_empty() and not (iron and staged.quality.iron_ended):
+		staged._award_victory(puzzle)
+		Quality.credit(staged.quality, puzzle, iron, int(staged.run.wins))
+	if not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
 	_publish(staged)
 	return true
@@ -133,7 +157,9 @@ func current_puzzle() -> Puzzle:
 	puzzle.bridges = boards.get(puzzle.puzzle_id, {}).duplicate(true)
 	return puzzle
 
-func capture(puzzle: Puzzle) -> bool:
+func capture(puzzle: Puzzle, award: bool = true) -> bool:
+	if is_procedural() and run.mode == "iron" and quality.iron_ended and puzzle.bridges != boards.get(puzzle.puzzle_id, {}):
+		return false
 	if puzzle.puzzle_id != str(catalog[current_index].id):
 		return false
 	var snapshot := snapshot_data()
@@ -141,6 +167,11 @@ func capture(puzzle: Puzzle) -> bool:
 	if not store.valid_snapshot(snapshot, base_catalog):
 		return false
 	boards = snapshot.boards
+	if award and quality.pending.is_empty() and not (is_procedural() and run.mode == "iron" and quality.iron_ended):
+		_award_victory(puzzle)
+	return true
+
+func _award_victory(puzzle: Puzzle) -> void:
 	if Rules.is_solved(puzzle):
 		if puzzle.puzzle_id not in completed_ids:
 			completed_ids.append(puzzle.puzzle_id)
@@ -148,7 +179,6 @@ func capture(puzzle: Puzzle) -> bool:
 			run = Mode.credit(run, puzzle.puzzle_id)
 		elif is_story():
 			story = Story.credit(story, puzzle.puzzle_id)
-	return true
 
 func select(index: int) -> bool:
 	if index < 0 or index >= catalog.size():
@@ -173,7 +203,7 @@ func advance() -> bool:
 func snapshot_data() -> Dictionary:
 	return {"version": Store.VERSION, "current_puzzle_id": str(catalog[current_index].id),
 		"boards": boards.duplicate(true), "completed_ids": completed_ids.duplicate(),
-		"procedural": procedural.duplicate(true), "run": run.duplicate(true), "story": story.duplicate(true)}
+		"procedural": procedural.duplicate(true), "run": run.duplicate(true), "story": story.duplicate(true), "quality": quality.duplicate(true)}
 
 func save_game() -> bool:
 	return store.save_game(snapshot_data(), base_catalog)
@@ -186,6 +216,8 @@ func story_index(ordinal: int) -> int:
 	return -1
 
 func install_story_and_save(ordinal: int, recipe: Dictionary) -> bool:
+	if not quality.pending.is_empty():
+		return false
 	if ordinal < StoryCatalog.COUNT or ordinal != int(story.frontier) or story_index(ordinal) >= 0:
 		return false
 	var id: String = str(recipe.get("puzzle", {}).get("id", ""))
@@ -208,6 +240,7 @@ func install_story_and_save(ordinal: int, recipe: Dictionary) -> bool:
 	staged.catalog.append_array(Story.definitions(staged.story))
 	staged.current_index = staged.story_index(ordinal)
 	staged.boards[id] = {}
+	Quality.prune(staged.quality, staged.boards.keys())
 	if not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
 	_publish(staged)

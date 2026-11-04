@@ -51,6 +51,7 @@ func run() -> void:
 	var old_bridges := puzzle.bridges.duplicate(true)
 	var legacy := session.snapshot_data()
 	legacy.version = 4
+	legacy.erase("quality")
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(legacy))
 	file.close()
@@ -62,7 +63,7 @@ func run() -> void:
 	check(reopened.story.recipes == old_recipes and reopened.current_puzzle().bridges == old_bridges, "legacy recipes and partial bridges unchanged")
 	check(reopened.run == saved_run and reopened.procedural == saved_procedural, "fixed-series state independent through migration")
 	check(reopened.save_game(), "explicit atomic migration")
-	check(JSON.parse_string(FileAccess.get_file_as_string(path)).version == 5, "new schema written")
+	check(JSON.parse_string(FileAccess.get_file_as_string(path)).version == 6, "new schema written")
 	solve_board(reopened)
 	var last_classic := Policy.generate(15, {}, Story.definitions(reopened.story), int(reopened.story.variant_from))
 	check(last_classic.status == "success" and last_classic.recipe.algorithm_version == "h02b-1", "unfinished old stage remains classical")

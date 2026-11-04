@@ -2,7 +2,7 @@ class_name HashiPlayMode
 extends RefCounted
 ## Versioned run policy. Size and CPU time never define challenge.
 const VERSION := 1
-const MODES := ["free", "fixed", "progression"]
+const MODES := ["free", "fixed", "progression", "iron"]
 const PROFILES := ["local", "contradiction1"]
 const MAX_WINS := 9007199254740990
 
@@ -21,7 +21,7 @@ static func valid(value: Variant, procedural: Dictionary) -> bool:
 		return false
 	if not value.credited_id is String or (not value.credited_id.is_empty() and not procedural.has(value.credited_id)):
 		return false
-	if value.mode == "fixed" and value.fixed_profile != value.board_profile:
+	if value.mode in ["fixed", "iron"] and value.fixed_profile != value.board_profile:
 		return false
 	if value.mode == "progression" and not procedural.is_empty():
 		var at_entry: Dictionary = value.duplicate(true)
@@ -33,7 +33,7 @@ static func valid(value: Variant, procedural: Dictionary) -> bool:
 	return true
 
 static func next_profile(run: Dictionary, free_profile: String = "local") -> String:
-	if run.mode == "fixed":
+	if run.mode in ["fixed", "iron"]:
 		return str(run.fixed_profile)
 	if run.mode == "free":
 		return free_profile
@@ -53,6 +53,8 @@ static func credit(run: Dictionary, puzzle_id: String) -> Dictionary:
 
 static func description(run: Dictionary) -> String:
 	var label := "Directo" if run.board_profile == "local" else "Reflexivo"
+	if run.mode == "iron":
+		return "Alma de Hierro · %s · %d perfectos" % [label, int(run.wins)]
 	if run.mode == "fixed":
 		return "Dificultad fija · %s · %d resueltos" % [label, int(run.wins)]
 	if run.mode == "progression":

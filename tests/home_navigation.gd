@@ -26,6 +26,13 @@ func wait_ui(ui: Control) -> void:
 		await process_frame
 	check(ui.generation_task == null, "bounded asynchronous request finishes")
 
+func settle_quality(ui: Control) -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not ui.session.quality.pending.is_empty() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	if not ui.session.quality.pending.is_empty():
+		check(false, "quality decision settles before next UI action")
+
 func run() -> void:
 	var path := "user://h03b1-game.json"
 	var ui = launch(path)
@@ -44,8 +51,11 @@ func run() -> void:
 	check(ui.session.store.load_game(ui.puzzles) == ui.session.snapshot_data(), "selection saved before activation")
 	var edges := Solver.candidate_edges(ui.board.puzzle)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	var snapshot: Dictionary = ui.session.snapshot_data()
 	var persisted := FileAccess.get_file_as_string(path)
 	var puzzle: RefCounted = ui.board.puzzle
@@ -63,6 +73,7 @@ func run() -> void:
 	check(ui.screen == "game" and ui.board.puzzle == puzzle, "continue reuses live puzzle without duplicated transition")
 	check(ui.board.history.past == past and ui.board.history.future == future, "menu round trip preserves undo and redo")
 	ui.redo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridge_count(edges[0].a, edges[0].b) == 2, "redo still operates after continue")
 	# An existing H02-C v2 session always opens at home without rewriting bytes.
 	snapshot = ui.session.snapshot_data()
@@ -87,8 +98,11 @@ func run() -> void:
 	var procedural_id: String = ui.board.puzzle.puzzle_id
 	edges = Solver.candidate_edges(ui.board.puzzle)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	var procedural_bridges: Dictionary = ui.board.puzzle.bridges.duplicate(true)
 	puzzle = ui.board.puzzle
 	past = ui.board.history.past.duplicate(true)
@@ -112,6 +126,7 @@ func run() -> void:
 		var static_edges := Solver.candidate_edges(ui.board.puzzle)
 		if ui.board.puzzle.bridges.is_empty():
 			ui.board._connect_islands(static_edges[0].a, static_edges[0].b)
+			await settle_quality(ui)
 		check(ui.session.boards[procedural_id] == procedural_bridges, "learning does not modify procedural " + str(index))
 	ui.home_button.pressed.emit()
 	snapshot = ui.session.snapshot_data()
@@ -185,12 +200,14 @@ func run() -> void:
 		var ids: PackedStringArray = edge.split(":")
 		for count in int(witness.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
+			await settle_quality(ui)
 	ui.new_board_button.pressed.emit()
 	check(ui.generation_task != null and not ui._confirmation_pending, "solved procedural needs no replacement warning")
 	ui.home_button.pressed.emit()
 	await wait_ui(ui)
 	ui.home.continue_button.pressed.emit()
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	ui.new_board_button.pressed.emit()
 	check(ui._confirmation_pending and ui.generation_task == null, "undo after victory protects unfinished procedural despite completed milestone")
 	ui.home.cancel_button.pressed.emit()
