@@ -5,6 +5,7 @@ signal selected(ordinal: int)
 signal back_requested
 const Catalog = preload("res://scripts/hashi_story_catalog.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
+const Art = preload("res://scripts/hashi_art.gd")
 var scroll: ScrollContainer
 var content: VBoxContainer
 var level_buttons: Array[Button] = []
@@ -39,6 +40,7 @@ func refresh(state: Dictionary, completed_ids: Array) -> void:
 		_label({"blue": "Azules · S: solo puentes simples. El número sigue contando todos los puentes.", "mystery": "Misteriosas · ?: sin número. Su cantidad de puentes se deduce de las otras islas y de conectar toda la red.", "combined": "Combinadas · S: solo puentes simples. ?: sin número. Une toda la red."}[kind])
 	follow_button = _button("Seguir · " + Catalog.title(current), func(): selected.emit(current))
 	follow_button.name = "FollowStory"
+	Art.primary(follow_button)
 	for ordinal in Catalog.COUNT:
 		if ordinal % Catalog.STAGE_SIZE == 0:
 			_label("Etapa %d" % (ordinal / Catalog.STAGE_SIZE + 1), 22)
@@ -67,6 +69,10 @@ func _label(text: String, font_size: int = 16) -> void:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", font_size)
+	if font_size >= 22:
+		Art.heading(label, font_size)
+	else:
+		label.add_theme_color_override("font_color", Art.MUTED)
 	content.add_child(label)
 func _button(text: String, callback: Callable) -> Button:
 	var button := Button.new()
