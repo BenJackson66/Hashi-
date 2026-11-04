@@ -34,3 +34,7 @@ La revisión completa detectó y corrigió la anchura mínima de la cabecera al 
 Versión0.4.0/código4, paquete `org.hashi.prototype`. Workflow aislado `story-apk.yml`, permisos mínimos contents/actions read, gate explícito `[apk]` y verificación de certificado actual/histórico. Ningún cambio de secretos ni claves. La APK se prepara tras cerrar revisión de fuente/CI/capturas; los enlaces y SHA finales se registran en el PR y la incidencia#11. No se fusiona ni se publica en tiendas en este encargo.
 
 La sesión implementadora de Igor se interrumpió por límite de uso después del primer bloque probado. Minerva retomó la revisión y el cierre, corrigió la cabecera y la caché de catálogo, añadió los recorridos de frontera/errores y preparó la entrega. No se presenta este cierre como una segunda revisión independiente de esos ajustes propios.
+
+## Cierre de fuente
+
+Fuente `9db6a95d36be6015007a35981e30a6d08d952233`: CI run41750140172/job126312907733 confirma72.813 comprobaciones sin fallos y reaperturas PASS, incluida la caché final. Minerva inspeccionó las capturas renderizadas y publicó el cierre técnico en PR#12, indicando los ajustes propios y la falta de una segunda revisión independiente de ellos. El commit de candidata solo añade este registro, sin alterar código de juego ni workflows.
