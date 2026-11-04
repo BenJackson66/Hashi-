@@ -18,7 +18,7 @@ Se conservan los 12 iniciales y los 4 niveles más recientes de la ruta continua
 
 El solver de variantes limita dominios incidentes a azules a0/1, mantiene0/1/2 en el resto, impone cardinalidad solo a islas numeradas y comprueba conectividad. Tiene límites de tiempo/nodos explícitos y devuelve incomplete sin afirmar unicidad si los alcanza.
 
-El generador parte de un clásico único en el worker, selecciona una azul con todas sus aristas testigo simples y elimina hasta 2 pistas solo si el nuevo solver demuestra unicidad bajo las pistas visibles. multiple permite restaurar una pista; incomplete aborta la solicitud. none/invalid abortan por inconsistencia. No se omiten candidatos por límites dependientes de velocidad. La verificación final debe ser unique.
+El generador parte de un clásico único en el worker, selecciona una azul con todas sus aristas testigo simples y elimina hasta 2 pistas solo si el nuevo solver demuestra unicidad bajo las pistas visibles. multiple permite restaurar una pista; incomplete aborta la solicitud. none/invalid abortan por inconsistencia. No se omiten candidatos por límites dependientes de velocidad. La política conserva el presupuesto de tiempo solicitado y comparte una fecha límite entre los reintentos; un presupuesto nulo o inválido falla sin receta. La verificación final debe ser unique.
 
 Solo se devuelve la receta pública: no hay solutions/construction_solution/bridges ni objetivo original de misteriosas en el handoff. El nuevo algoritmo e identidad SHA-256 incluyen versión de reglas, semilla y todas las pistas públicas canónicas. La receta de variantes se acepta exclusivamente en Historia; el normalizador de procedural libre sigue rechazándola. El solver no se ejecuta al abrir cada guardado.
 
@@ -30,10 +30,10 @@ Los fallos de escritura conservan selección, recetas, run y frontera anteriores
 
 ## Evidencia ejecutada
 
-Godot 4.6.3 oficial verificado. `tests/run.sh`: **73.891 comprobaciones, 0 fallos**, sumando la suite completa de 73.820 y la revisión independiente de migración 71 incorporada y ejecutada de forma focal. También pasan las reaperturas clásica/procedural en procesos separados. CI debe confirmar el SHA publicado.
+Godot 4.6.3 oficial verificado. `tests/run.sh`: **73.892 comprobaciones, 0 fallos**, sumando la suite completa de 73.821 y la revisión independiente de migración 71 incorporada y ejecutada de forma focal. También pasan las reaperturas clásica/procedural en procesos separados. CI debe confirmar el SHA publicado.
 
 - `tests/variant_oracle.gd`: autoría/revisión independiente de Minerva,621 comprobaciones sobre 291 casos públicos. Enumeración autónoma de grafos 4/6 con cruce y caminos externos:258 sin solución, 31 únicos, 2 múltiples. Contrasta los conjuntos testigo sin usar reglas ni aristas productivas.
-- `tests/variants.gd`:386 comprobaciones de generación determinista en 15 combinaciones semilla/tipo, unicidad visible, rechazo de target secreto, límites, ciclo azul, feedback de advertencias, leyendas,25 niveles de UI y reaperturas.
+- `tests/variants.gd`:387 comprobaciones de generación determinista en 15 combinaciones semilla/tipo, unicidad visible, rechazo de target secreto, límites, ciclo azul, feedback de advertencias, leyendas,25 niveles de UI y reaperturas.
 - `tests/variant_migration_review.gd`: revisión independiente de Minerva,71 comprobaciones. Archivo v4 real con frontera 14, receta clásica parcial y serie conservada; migración sin escritura, frontera futura 16, fallo real de escritura al entrar azul, reintento y reapertura exacta.
 - Suites heredadas de reglas, identidad, perfiles, modos, Historia y firma continúan pasando. Sus comprobaciones históricas no son nuevas muestras estadísticas.
 

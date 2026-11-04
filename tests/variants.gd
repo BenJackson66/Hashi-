@@ -56,6 +56,8 @@ func run():
 			check(Solver.new().solve(Puzzle.new(recipe.puzzle), {"max_nodes": 0}).status == "incomplete", "node budget never claims uniqueness")
 			check(Solver.new().solve(Puzzle.new(recipe.puzzle), {"max_time_ms": 0}).status == "incomplete", "time budget never claims uniqueness")
 	check(Generator.new().generate(1, "combined", {"max_attempts": 0}).status == "failure", "invalid generation budget fails closed")
+	var no_budget := Policy.generate(12, {"max_time_ms": 0}, [], 12)
+	check(no_budget.status == "failure" and not no_budget.has("recipe"), "story variant respects zero requested budget")
 	await integration()
 	print("VARIANTS RESULT: ", checks, " checks, ", failures, " failures")
 	quit(1 if failures else 0)

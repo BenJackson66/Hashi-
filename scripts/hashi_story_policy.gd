@@ -50,13 +50,16 @@ static func kind_at(ordinal: int, variant_from: int = -1) -> String:
 		return "classic"
 	return ["blue", "mystery", "combined", "classic"][((ordinal - variant_from) / Catalog.STAGE_SIZE) % 4]
 static func _generate_variant(ordinal: int, kind: String, budgets: Dictionary, excluded: Array) -> Dictionary:
-	var deadline := Time.get_ticks_msec() + 10000
+	var time_budget: Variant = budgets.get("max_time_ms", 5000)
+	if not time_budget is int or time_budget < 1 or time_budget > 10000:
+		return {"status": "failure", "reason": "invalid_variant_budget"}
+	var deadline: int = Time.get_ticks_msec() + time_budget
 	for retry in 8:
 		var remaining := deadline - Time.get_ticks_msec()
 		if remaining <= 0:
 			return {"status": "failure", "reason": "variant_time_limit"}
 		var options := budgets.duplicate(true)
-		options.max_time_ms = mini(5000, remaining)
+		options.max_time_ms = mini(time_budget, remaining)
 		var digest := ("visible-route-1:" + str(ordinal) + ":" + str(retry)).sha256_text()
 		var result := Variants.new().generate(digest.substr(0, 8).hex_to_int() % 2147483646, kind, options)
 		if result.status != "success":
