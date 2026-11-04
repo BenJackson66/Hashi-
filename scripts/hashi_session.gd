@@ -7,6 +7,7 @@ const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
 const Quality = preload("res://scripts/hashi_quality.gd")
+const Attempts = preload("res://scripts/hashi_story_attempts.gd")
 const Store = preload("res://scripts/hashi_save_store.gd")
 var base_catalog: Array
 var procedural: Dictionary = {}
@@ -19,6 +20,7 @@ var completed_ids: Array = []
 var run: Dictionary = Mode.fresh()
 var story: Dictionary = Story.fresh()
 var quality: Dictionary = Quality.fresh()
+var story_attempts: Dictionary = Attempts.fresh()
 
 func _init(definitions: Array = [], save_path: String = "user://hashi-save-v1.json") -> void:
 	base_catalog = definitions.duplicate(true)
@@ -38,6 +40,7 @@ func restore() -> bool:
 	for recipe in procedural.values():
 		catalog.append(recipe.puzzle.duplicate(true))
 	quality = data.quality.duplicate(true)
+	story_attempts = data.story_attempts.duplicate(true)
 	story = data.story.duplicate(true)
 	catalog.append_array(Story.definitions(story))
 	current_index = -1
@@ -94,6 +97,7 @@ func _staged() -> HashiSession:
 	staged.run = run.duplicate(true)
 	staged.story = story.duplicate(true)
 	staged.quality = quality.duplicate(true)
+	staged.story_attempts = story_attempts.duplicate(true)
 	return staged
 
 func _publish(staged: HashiSession) -> void:
@@ -105,6 +109,7 @@ func _publish(staged: HashiSession) -> void:
 	run = staged.run
 	story = staged.story
 	quality = staged.quality
+	story_attempts = staged.story_attempts
 
 func install_procedural_and_save(value: Dictionary, requested_run: Dictionary = {}) -> bool:
 	if not quality.pending.is_empty():
@@ -141,10 +146,19 @@ func capture_and_save(puzzle: Puzzle, actions: Array = [], verdict: Dictionary =
 	var actual_actions := actions.duplicate(true)
 	if actual_actions.is_empty() and puzzle.bridges != boards.get(puzzle.puzzle_id, {}):
 		actual_actions.append({"kind": "move", "before": boards.get(puzzle.puzzle_id, {}).duplicate(true), "bridges": puzzle.bridges.duplicate(true)})
+	var expected: Dictionary = boards.get(puzzle.puzzle_id, {}).duplicate(true)
 	for event in actual_actions:
+		if not event is Dictionary or not event.has_all(["before", "bridges"]) or event.before != expected or not store._valid_bridges(event.bridges, catalog[current_index]):
+			return false
+		expected = event.bridges
+	if expected != puzzle.bridges:
+		return false
+	for event in actual_actions:
+		if staged.is_story():
+			Attempts.apply_action(staged.story_attempts, puzzle, event)
 		if not Quality.action(staged.quality, puzzle, event, iron):
 			return false
-	if staged.quality.pending.is_empty() and not (iron and staged.quality.iron_ended):
+	if staged.quality.pending.is_empty() and not (iron and staged.quality.iron_ended) and not staged.story_lost():
 		staged._award_victory(puzzle)
 		Quality.credit(staged.quality, puzzle, iron, int(staged.run.wins))
 	if not store.save_game(staged.snapshot_data(), base_catalog):
@@ -158,6 +172,8 @@ func current_puzzle() -> Puzzle:
 	return puzzle
 
 func capture(puzzle: Puzzle, award: bool = true) -> bool:
+	if is_story() and story_corrections_left() == 0 and puzzle.bridges != boards.get(puzzle.puzzle_id, {}):
+		return false
 	if is_procedural() and run.mode == "iron" and quality.iron_ended and puzzle.bridges != boards.get(puzzle.puzzle_id, {}):
 		return false
 	if puzzle.puzzle_id != str(catalog[current_index].id):
@@ -167,7 +183,7 @@ func capture(puzzle: Puzzle, award: bool = true) -> bool:
 	if not store.valid_snapshot(snapshot, base_catalog):
 		return false
 	boards = snapshot.boards
-	if award and quality.pending.is_empty() and not (is_procedural() and run.mode == "iron" and quality.iron_ended):
+	if award and quality.pending.is_empty() and not (is_procedural() and run.mode == "iron" and quality.iron_ended) and not story_lost():
 		_award_victory(puzzle)
 	return true
 
@@ -203,7 +219,7 @@ func advance() -> bool:
 func snapshot_data() -> Dictionary:
 	return {"version": Store.VERSION, "current_puzzle_id": str(catalog[current_index].id),
 		"boards": boards.duplicate(true), "completed_ids": completed_ids.duplicate(),
-		"procedural": procedural.duplicate(true), "run": run.duplicate(true), "story": story.duplicate(true), "quality": quality.duplicate(true)}
+		"procedural": procedural.duplicate(true), "run": run.duplicate(true), "story": story.duplicate(true), "quality": quality.duplicate(true), "story_attempts": story_attempts.duplicate(true)}
 
 func save_game() -> bool:
 	return store.save_game(snapshot_data(), base_catalog)
@@ -241,6 +257,28 @@ func install_story_and_save(ordinal: int, recipe: Dictionary) -> bool:
 	staged.current_index = staged.story_index(ordinal)
 	staged.boards[id] = {}
 	Quality.prune(staged.quality, staged.boards.keys())
+	Attempts.prune(staged.story_attempts, staged.boards.keys())
+	if not store.save_game(staged.snapshot_data(), base_catalog):
+		return false
+	_publish(staged)
+	return true
+
+func story_corrections_left() -> int:
+	return Attempts.remaining(story_attempts, str(catalog[current_index].id)) if is_story() else Attempts.LIMIT
+
+func story_lost() -> bool:
+	return is_story() and Attempts.lost(story_attempts, str(catalog[current_index].id))
+
+func restart_story_and_save() -> bool:
+	if not is_story() or not quality.pending.is_empty():
+		return false
+	if current_puzzle().bridges.is_empty() and story_corrections_left() == Attempts.LIMIT and not story_lost():
+		return true
+	var staged := _staged()
+	var id: String = str(catalog[current_index].id)
+	staged.boards[id] = {}
+	Attempts.restart(staged.story_attempts, id)
+	Quality.fault(staged.quality, id, false)
 	if not store.save_game(staged.snapshot_data(), base_catalog):
 		return false
 	_publish(staged)

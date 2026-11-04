@@ -67,6 +67,7 @@ func run() -> void:
 	var legacy := session.snapshot_data()
 	legacy.version = 5
 	legacy.erase("quality")
+	legacy.erase("story_attempts")
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(legacy))
 	file.close()

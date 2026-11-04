@@ -58,6 +58,20 @@ var _last_requested_seed := -1
 var save_path := "user://hashi-save-v1.json"
 var save_failed := false
 
+var level_label: Label
+var help_button: Button
+var help_view: MarginContainer
+var help_title: Label
+var help_text: Label
+var warnings_toggle: CheckButton
+var notice: Label
+var streak_count: Label
+var record_count: Label
+var attempt_count: Label
+var attempt_chip: HBoxContainer
+var record_chip: HBoxContainer
+var _confirmation_page := "home"
+
 func _ready() -> void:
 	set_process(false)
 	theme = Art.theme()
@@ -73,86 +87,82 @@ func _ready() -> void:
 	if not session.procedural.is_empty():
 		_last_requested_seed = str(session.procedural.values()[0].seed).to_int()
 	var recovery_message := session.store.last_error
-	var margin := MarginContainer.new()
-	game_view = margin
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_view = MarginContainer.new()
+	game_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 12)
-	add_child(margin)
+		game_view.add_theme_constant_override("margin_" + side, 16)
+	add_child(game_view)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
-	margin.add_child(column)
+	column.add_theme_constant_override("separation", 10)
+	game_view.add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
-	home_button = _button("Inicio", header, _show_home)
-	home_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	var heading := Label.new()
-	heading.text = "HASHI"
-	Art.heading(heading, 19)
-	header.add_child(heading)
-	selector = OptionButton.new()
-	selector.fit_to_longest_item = false
-	selector.clip_text = true
-	selector.custom_minimum_size.y = 48
-	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for i in puzzles.size():
-		selector.add_item("%d · %s" % [i + 1, puzzles[i].title])
-	header.add_child(selector)
-	var hint := Label.new()
-	gesture_hint = hint
-	hint.text = "Toca dos islas o desliza entre ellas.\nPuentes: 0 → 1 → 2 → 0. Une toda la red."
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(hint)
-	hint.add_theme_color_override("font_color", Art.MUTED)
-	mode_status = Label.new()
-	mode_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	mode_status.add_theme_font_size_override("font_size", 14)
-	column.add_child(mode_status)
-	mode_status.add_theme_color_override("font_color", Art.GOLD)
-	quality_status = Label.new()
-	quality_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quality_status.add_theme_font_size_override("font_size", 14)
-	column.add_child(quality_status)
-	quality_retry = _button("Reintentar comprobación", column, _retry_quality)
-	quality_retry.custom_minimum_size.y = 36
-	quality_retry.hide()
+	home_button = _button("", header, _show_home)
+	Art.symbol(home_button, "back", "Inicio")
+	level_label = Label.new()
+	level_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Art.heading(level_label, 30)
+	header.add_child(level_label)
+	help_button = _button("", header, _show_help)
+	Art.symbol(help_button, "menu", "Ayuda y opciones")
+	var stats := HBoxContainer.new()
+	stats.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats.add_theme_constant_override("separation", 24)
+	column.add_child(stats)
+	streak_count = _stat(stats, "flame", "Racha de tableros perfectos")
+	attempt_count = _stat(stats, "heart", "Correcciones de Historia restantes")
+	attempt_chip = attempt_count.get_parent()
+	record_count = _stat(stats, "crown", "Récord de Alma de Hierro")
+	record_chip = record_count.get_parent()
 	board = Board.new()
 	board.set_motion_enabled(art_preferences.motion)
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(200, 200)
 	column.add_child(board)
-	status = Label.new()
-	status.custom_minimum_size.y = 36
-	status.add_theme_font_size_override("font_size", 14)
-	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(status)
-	var warnings := CheckButton.new()
-	warnings.text = "Advertencias de errores"
-	warnings.custom_minimum_size.y = 44
-	warnings.button_pressed = false
-	warnings.toggled.connect(func(enabled: bool):
-		board.warnings_enabled = enabled
-		board.queue_redraw()
-		_update_status("")
-	)
-	column.add_child(warnings)
-	var history_row := HBoxContainer.new()
-	column.add_child(history_row)
-	undo_button = _button("Deshacer", history_row, board.undo)
-	redo_button = _button("Rehacer", history_row, board.redo)
-	new_board_button = _button("Nuevo tablero", history_row, _ask_new_puzzle)
-	var navigation := HBoxContainer.new()
-	column.add_child(navigation)
-	restart_button = _button("Reiniciar", navigation, board.reset)
-	next_button = _button("Siguiente", navigation, _next_puzzle)
+	notice = Label.new()
+	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(notice)
+	var controls := HBoxContainer.new()
+	controls.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_child(controls)
+	undo_button = _button("", controls, board.undo)
+	Art.symbol(undo_button, "undo", "Deshacer")
+	redo_button = _button("", controls, board.redo)
+	Art.symbol(redo_button, "redo", "Rehacer")
+	restart_button = _button("", controls, _restart_current)
+	Art.symbol(restart_button, "restart", "Repetir nivel")
+	new_board_button = _button("", controls, _ask_new_puzzle)
+	Art.symbol(new_board_button, "new", "Nuevo tablero")
+	next_button = _button("", controls, _next_puzzle)
+	Art.symbol(next_button, "play", "Siguiente")
 	Art.primary(next_button)
+	quality_retry = _button("", column, _retry_quality)
+	Art.symbol(quality_retry, "restart", "Reintentar")
+	quality_retry.hide()
+	# Semantic state retained for accessibility, help and regression tests; hidden from play.
+	selector = OptionButton.new()
+	selector.fit_to_longest_item = false
+	selector.clip_text = true
+	add_child(selector)
+	selector.hide()
+	for i in puzzles.size():
+		selector.add_item(str(i+1))
+	gesture_hint = Label.new()
+	mode_status = Label.new()
+	quality_status = Label.new()
+	status = Label.new()
+	for label in [gesture_hint, mode_status, quality_status, status]:
+		add_child(label)
+		label.hide()
 	board.puzzle_changed.connect(_on_puzzle_changed)
 	board.state_changed.connect(_update_status)
 	selector.item_selected.connect(_select_puzzle)
 	home = Home.new()
 	add_child(home)
 	home.build(puzzles)
+	home.challenge.select(0 if settings.profile == "local" else 1)
 	home.motion_button.set_pressed_no_signal(art_preferences.motion)
 	home.motion_requested.connect(func(enabled: bool):
 		if art_preferences.save_motion(enabled):
@@ -160,12 +170,12 @@ func _ready() -> void:
 		else:
 			home.motion_button.set_pressed_no_signal(art_preferences.motion)
 	)
-	home.challenge.select(0 if settings.profile == "local" else 1)
 	story_view = StoryView.new()
 	add_child(story_view)
 	story_view.hide()
 	story_view.selected.connect(_select_story)
 	story_view.back_requested.connect(_show_home)
+	story_view.help_requested.connect(func(): _show_help(true))
 	home.story_requested.connect(_show_story)
 	home.profile_requested.connect(_choose_profile)
 	home.continue_requested.connect(_continue_game)
@@ -175,6 +185,7 @@ func _ready() -> void:
 	home.confirm_requested.connect(_confirm_new_puzzle)
 	home.cancel_requested.connect(_cancel_new_puzzle)
 	home.page_changed.connect(_on_home_page_changed)
+	_build_help()
 	quality_worker = QualityWorker.new()
 	quality_worker.host = self
 	add_child(quality_worker)
@@ -183,6 +194,104 @@ func _ready() -> void:
 	if not recovery_message.is_empty():
 		_generation_message = recovery_message
 		_update_status("")
+
+func _stat(parent: Control, icon_name: String, label: String) -> Label:
+	var chip := HBoxContainer.new()
+	chip.alignment = BoxContainer.ALIGNMENT_CENTER
+	chip.tooltip_text = label
+	parent.add_child(chip)
+	var icon := TextureRect.new()
+	icon.texture = Art.ICONS[icon_name]
+	icon.modulate = Art.GOLD if icon_name == "flame" else Art.INK
+	icon.custom_minimum_size = Vector2(22,22)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	chip.add_child(icon)
+	var count := Label.new()
+	count.add_theme_font_size_override("font_size", 18)
+	chip.add_child(count)
+	return count
+
+func _build_help() -> void:
+	help_view = MarginContainer.new()
+	help_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "top", "right", "bottom"]:
+		help_view.add_theme_constant_override("margin_" + side, 14)
+	add_child(help_view)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", Art.surface(Art.PAPER, Art.BORDER, 24))
+	help_view.add_child(panel)
+	var column := VBoxContainer.new()
+	panel.add_child(column)
+	var header := HBoxContainer.new()
+	column.add_child(header)
+	var back := _button("", header, _close_help)
+	Art.symbol(back, "back", "Volver a la partida")
+	help_title = Label.new()
+	Art.heading(help_title, 24)
+	help_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(help_title)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(scroll)
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 18)
+	scroll.add_child(body)
+	help_text = Label.new()
+	help_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_child(help_text)
+	warnings_toggle = CheckButton.new()
+	warnings_toggle.text = "Señalar excesos"
+	warnings_toggle.custom_minimum_size.y = 52
+	warnings_toggle.toggled.connect(func(enabled: bool):
+		board.warnings_enabled = enabled
+		board.queue_redraw()
+		_update_status("")
+	)
+	body.add_child(warnings_toggle)
+	home.motion_button.reparent(body)
+	_button("Aprender", body, func():
+		_close_help()
+		_show_home()
+		home.show_page("learn")
+	)
+	help_view.hide()
+
+func _show_help(force_story: bool = false) -> void:
+	_clear_gesture()
+	var in_story := force_story or session.is_story() or screen == "story"
+	var name_mode: String = "Historia" if in_story else {"free":"Libre", "fixed":"Dificultad fija", "progression":"Progresión", "iron":"Alma de Hierro"}[session.run.mode]
+	if not in_story and not session.is_procedural():
+		name_mode = "Aprender"
+	help_title.text = name_mode
+	var description: String = "Resuelve un nivel para abrir el siguiente. El corazón cuenta tus tres correcciones por intento. Deshacer o borrar puentes consume una; cortar varios con un solo gesto cuenta una vez. Cuando se agotan, termina el intento si aún no has resuelto la red. Repite para volver a intentarlo: conservas los niveles superados." if in_story else {"free":"Un tablero a tu ritmo. Elige Directo o Reflexivo en Modos.", "fixed":"Una serie con el mismo perfil de desafío.", "progression":"Una serie que va de Directo a Reflexivo.", "iron":"La primera falta termina el desafío. Conservas tu récord al empezar otro."}[session.run.mode]
+	if name_mode == "Aprender":
+		description = "Unos tableros para familiarizarte con los puentes."
+	help_text.text = description + "\n\nCÓMO JUGAR\nConecta todas las islas en una red. Cada número cuenta los puentes que necesita. Entre dos islas caben hasta dos puentes. No pueden cruzarse ni pasar sobre otra isla.\n\nToca dos islas o desliza entre ellas: 0 → 1 → 2 → 0. Las S alternan 0 → 1 → 0. Para borrar, cruza el puente con un trazo. Puedes cortar varios a la vez.\n\nS: solo puentes simples. ?: sin número.\n\nRACHA\nEl símbolo de la llama cuenta tableros perfectos. Deshacer, retirar puentes o dejar la red sin solución corta la racha. Azul:1; morado:3; dorado:7.\n\nLas flechas curvas deshacen y rehacen; la circular repite y el triángulo continúa."
+	if save_failed or not session.quality.pending.is_empty():
+		help_text.text += "\n\n" + status.text
+	help_view.show()
+	board.input_enabled = false
+
+func _close_help() -> void:
+	help_view.hide()
+	_update_status("")
+
+func _restart_current() -> void:
+	if save_failed:
+		_save_game()
+		if save_failed:
+			return
+	if session.is_story():
+		if session.restart_story_and_save():
+			_display_current()
+		else:
+			_generation_message = "No se pudo repetir. Se conserva tu partida."
+			_update_status("")
+	else:
+		board.reset()
 
 func _button(text: String, parent: Control, callback: Callable) -> Button:
 	var button := Button.new()
@@ -226,7 +335,7 @@ func _select_puzzle(index: int) -> void:
 	_open_game()
 
 func _next_puzzle() -> void:
-	if not session.quality.pending.is_empty() or _iron_ended():
+	if not session.quality.pending.is_empty() or _iron_ended() or session.story_lost():
 		return
 	if not Rules.is_solved(board.puzzle):
 		return
@@ -245,6 +354,8 @@ func _choose_profile(profile: String) -> void:
 	_update_status("")
 
 func _show_home() -> void:
+	if help_view != null:
+		help_view.hide()
 	_confirmation_pending = false
 	_invalidate_generation()
 	screen = "home"
@@ -257,16 +368,16 @@ func _show_home() -> void:
 	_update_status("")
 
 func _on_home_page_changed() -> void:
+	_clear_gesture()
 	_invalidate_generation()
 	_update_status("")
 
 func _clear_gesture() -> void:
-	board.selected = ""
-	board.pressed = ""
-	board.active_touch = -1
-	board.queue_redraw()
+	board.cancel_gesture()
 
 func _open_game() -> void:
+	if help_view != null:
+		help_view.hide()
 	_confirmation_pending = false
 	_invalidate_generation()
 	screen = "game"
@@ -300,6 +411,7 @@ func _ask_new_puzzle(requested_run: Dictionary = {}) -> void:
 		previous.bridges = session.boards.get(id, {}).duplicate(true)
 		if not previous.bridges.is_empty() and not Rules.is_solved(previous):
 			_confirmation_origin = screen
+			_confirmation_page = home.page
 			_confirmation_pending = true
 			screen = "confirm"
 			_clear_gesture()
@@ -318,6 +430,8 @@ func _cancel_new_puzzle() -> void:
 		_open_game()
 	else:
 		_show_home()
+		if _confirmation_page == "modes":
+			home.show_page("modes")
 
 func _confirm_new_puzzle() -> void:
 	if not _confirmation_pending:
@@ -342,18 +456,22 @@ func _save_game() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST and home != null:
-		if _confirmation_pending:
+		if help_view != null and help_view.visible:
+			_close_help()
+		elif _confirmation_pending:
 			_cancel_new_puzzle()
 		elif screen in ["game", "story"]:
 			_show_home()
 		elif home.page != "home":
-			home.show_page("home")
+			home.show_page("modes" if home.page == "rules" else "home")
 		else:
 			if save_failed:
 				_save_game()
 			get_tree().quit()
 		return
 	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_CLOSE_REQUEST]:
+		if board != null:
+			_clear_gesture()
 		# Successful changes are already flushed. Retry only a pending failure;
 		# opening/focusing a bad save must not silently replace it with an empty one.
 		if session != null and board != null and save_failed:
@@ -405,7 +523,7 @@ func _update_status(message: String) -> void:
 		status.text += " No se pudo guardar la partida."
 	var pending_quality: bool = not session.quality.pending.is_empty()
 	var ended := _iron_ended()
-	board.bridge_color = Color("f1c55b") if session.quality.streak >= 7 else (Color("a982e7") if session.quality.streak >= 3 else (Color("5db9ff") if session.quality.streak >= 1 else Color("aac4d1")))
+	board.bridge_color = Color("a16b29") if session.quality.streak >= 7 else (Color("77558a") if session.quality.streak >= 3 else (Color("2b7a9b") if session.quality.streak >= 1 else Color("466451")))
 	board.queue_redraw()
 	board.input_enabled = not pending_quality and not ended and not save_failed
 	undo_button.disabled = undo_button.disabled or pending_quality or ended or save_failed
@@ -428,6 +546,33 @@ func _update_status(message: String) -> void:
 		story_view.update_state(generation_task != null or pending_quality, status.text if generation_task != null or pending_quality or not _generation_message.is_empty() or save_failed else "")
 	if home != null:
 		home.update_state(_has_game, generation_task != null or pending_quality, status.text if generation_task != null or pending_quality or not _generation_message.is_empty() or save_failed else "", pending_quality)
+
+	var story_over := session.is_story() and session.story_corrections_left() == 0
+	board.input_enabled = board.input_enabled and not story_over and not help_view.visible
+	undo_button.disabled = undo_button.disabled or story_over
+	redo_button.disabled = redo_button.disabled or story_over
+	next_button.disabled = next_button.disabled or session.story_lost()
+	if session.is_story():
+		level_label.text = StoryView.level_code(session.story_ordinal())
+	elif session.is_procedural():
+		level_label.text = str(maxi(1, int(session.run.wins) + (0 if session.run.credited_id == board.puzzle.puzzle_id else 1)))
+	else:
+		level_label.text = str(session.current_index + 1)
+	level_label.tooltip_text = mode_status.text
+	streak_count.text = str(int(session.quality.streak))
+	attempt_count.text = str(session.story_corrections_left())
+	record_count.text = str(int(session.quality.iron_record))
+	attempt_chip.visible = session.is_story()
+	record_chip.visible = session.is_procedural() and session.run.mode == "iron"
+	for semantic in [gesture_hint, mode_status, quality_status, status, selector]:
+		semantic.hide()
+	for button in [next_button, quality_retry]:
+		button.tooltip_text = button.text
+		button.text = ""
+	if session.story_lost():
+		status.text = "Intento terminado. Repite para volver a intentarlo."
+	notice.text = "Otra oportunidad" if session.story_lost() else ("Ronda terminada" if ended else ("¡Bien hecho!" if solved else ("No se pudo guardar" if save_failed else ("Un momento…" if generation_task != null or pending_quality else ("Inténtalo de nuevo" if not _generation_message.is_empty() else "")))))
+	notice.visible = not notice.text.is_empty()
 
 func _sync_selector() -> void:
 	if selector.item_count != session.catalog.size():
@@ -523,6 +668,9 @@ func _exit_tree() -> void:
 
 
 func _show_story() -> void:
+	_clear_gesture()
+	if help_view != null:
+		help_view.hide()
 	_invalidate_generation()
 	screen = "story"
 	home.hide()

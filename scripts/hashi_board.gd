@@ -21,11 +21,21 @@ var motion_enabled := true
 var _motions: Dictionary = {}
 var _win_glow := 0.0
 const MOTION_SECONDS := 0.16
+var _gesture_active := false
+var _stroke_origin := Vector2.ZERO
+var _stroke_point := Vector2.ZERO
+var _stroke_distance := 0.0
+var _stroke_excursion := 0.0
+var _started_on_core := false
+var _cut_candidates: Dictionary = {}
+var _cut_sides: Dictionary = {}
+var _touching_bridge: Dictionary = {}
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	resized.connect(queue_redraw)
 	set_process(false)
+	cancel_gesture()
 
 func set_puzzle(value: Puzzle) -> void:
 	puzzle = value
@@ -36,6 +46,7 @@ func set_puzzle(value: Puzzle) -> void:
 	_motions.clear()
 	_win_glow = 0.0
 	set_process(false)
+	cancel_gesture()
 	queue_redraw()
 
 func reset() -> void:
@@ -69,6 +80,7 @@ func _notify_change(kind: String, before: Dictionary) -> void:
 	selected = ""
 	pressed = ""
 	active_touch = -1
+	cancel_gesture()
 	puzzle_changed.emit()
 	state_changed.emit("")
 	queue_redraw()
@@ -91,13 +103,13 @@ func _draw() -> void:
 	_layout_islands()
 	if not puzzle:
 		return
-	var panel := Art.surface(Color("132c33"), Color("38544f"), 18)
+	var panel := Art.surface(Color("faf7ed"), Art.BORDER, 18)
 	panel.content_margin_left = 0
 	panel.draw(get_canvas_item(), Rect2(Vector2(1, 1), size - Vector2(2, 2)))
 	# Specks suggest a quiet tabletop without suggesting puzzle connections.
 	for x in range(18, int(size.x) - 10, 24):
 		for y in range(18, int(size.y) - 10, 24):
-			draw_circle(Vector2(x, y), 0.65, Color(0.6,0.75,0.7,0.08))
+			draw_circle(Vector2(x, y), 0.65, Color(0.35,0.5,0.35,0.06))
 	if _win_glow > 0:
 		var finish := Art.surface(Color(0,0,0,0), Color(0.85,0.72,0.47,_win_glow * 0.8), 18)
 		finish.set_border_width_all(2)
@@ -111,6 +123,8 @@ func _draw() -> void:
 		var b: Vector2 = centers[ids[1]]
 		var amount := int(visible_edges[edge])
 		var tint := bridge_color
+		if _cut_candidates.has(edge):
+			tint = Color("ba6d51")
 		var spread := 1.0
 		if _motions.has(edge):
 			var anim: Dictionary = _motions[edge]
@@ -133,11 +147,11 @@ func _draw() -> void:
 		var id := str(item.id)
 		var point: Vector2 = centers[id]
 		var fill := island_fill(item)
-		draw_circle(point + Vector2(0, 3), radius + 1, Color(0.02,0.08,0.1,0.7))
+		draw_circle(point + Vector2(0, 3), radius + 1, Color(0.25,0.32,0.2,0.18))
 		if selected == id:
 			draw_arc(point, radius + 4, 0, TAU, 48, Art.GOLD, 2, true)
 		draw_circle(point, radius, fill)
-		draw_arc(point, radius, 0, TAU, 48, Color("93aaa1"), 1.4, true)
+		draw_arc(point, radius, 0, TAU, 48, Color("aabb9e"), 1.4, true)
 		draw_arc(point - Vector2(0, 0.6), radius - 2.5, PI, TAU, 28, Color(1,1,1,0.12), 1, true)
 		var text := "?" if item.get("variant") == "mystery" else str(int(item.target))
 		var font_size := int(clampf(radius * 1.1, 13, 26))
@@ -151,7 +165,7 @@ func _draw() -> void:
 			draw_string(font, badge + Vector2(-3.5, 3.5), "S", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("bcdef3"))
 
 func _bridge(a: Vector2, b: Vector2, tint: Color) -> void:
-	draw_line(a + Vector2(0, 2), b + Vector2(0, 2), Color(0.02,0.09,0.11,tint.a * 0.6), 5, true)
+	draw_line(a + Vector2(0, 2), b + Vector2(0, 2), Color(0.2,0.35,0.2,tint.a * 0.15), 5, true)
 	draw_line(a, b, tint, 2.8, true)
 
 func _animate_change(before: Dictionary) -> void:
@@ -188,7 +202,7 @@ func set_motion_enabled(enabled: bool) -> void:
 func _hit(point: Vector2) -> String:
 	_layout_islands()
 	var closest := ""
-	var distance := maxf(radius, 24.0)
+	var distance := maxf(radius + 14.0, 34.0)
 	for id in centers:
 		var candidate := point.distance_to(centers[id])
 		if candidate <= distance:
@@ -197,9 +211,30 @@ func _hit(point: Vector2) -> String:
 	return closest
 
 func _release(point: Vector2) -> void:
+	if not _gesture_active:
+		return
+	_track_stroke(point)
 	var target := _hit(point)
+	# A tap keeps its original island even if finger jitter crosses a hit-area boundary.
+	var tap_limit := 12.0
 	if not pressed.is_empty() and not target.is_empty() and target != pressed:
+		tap_limit = minf(tap_limit, centers[pressed].distance_to(centers[target]) * 0.35)
+	if not pressed.is_empty() and _stroke_excursion < tap_limit:
+		target = pressed
+	var aims_at_islands := false
+	if not pressed.is_empty() and not target.is_empty() and target != pressed:
+		var toward: Vector2 = (centers[target] - centers[pressed]).normalized()
+		var direction := (point - _stroke_origin).normalized()
+		var lateral := maxf(absf(toward.cross(_stroke_origin - centers[pressed])), absf(toward.cross(point - centers[target])))
+		var in_corridor := _cut_candidates.is_empty() or lateral <= radius * 0.65
+		aims_at_islands = _started_on_core or not _core_hit(point).is_empty() or (absf(direction.dot(toward)) >= 0.72 and in_corridor)
+	if aims_at_islands:
 		_connect_islands(pressed, target)
+	elif _stroke_excursion >= 18 and not _started_on_core and _core_hit(point).is_empty() and not _cut_candidates.is_empty():
+		var before := puzzle.bridges.duplicate(true)
+		for edge in _cut_candidates:
+			puzzle.bridges.erase(edge)
+		_finish_change(before, "cut")
 	elif not pressed.is_empty() and target == pressed:
 		if not selected.is_empty() and selected != target:
 			_connect_islands(selected, target)
@@ -207,7 +242,70 @@ func _release(point: Vector2) -> void:
 			selected = "" if selected == target else target
 	else:
 		selected = ""
+	_end_pointer()
+	queue_redraw()
+
+func _core_hit(point: Vector2) -> String:
+	var result := ""
+	var closest := radius
+	for id in centers:
+		var distance: float = point.distance_to(centers[id])
+		if distance <= closest:
+			closest = distance
+			result = id
+	return result
+
+func _begin_pointer(point: Vector2) -> void:
+	_layout_islands()
+	_end_pointer()
+	_gesture_active = true
+	_stroke_origin = point
+	_stroke_point = point
+	_started_on_core = not _core_hit(point).is_empty()
+	pressed = _hit(point)
+
+func _end_pointer() -> void:
+	_gesture_active = false
+	_stroke_distance = 0
+	_stroke_excursion = 0
+	_cut_candidates.clear()
+	_cut_sides.clear()
+	_touching_bridge.clear()
 	pressed = ""
+	active_touch = -1
+
+func cancel_gesture() -> void:
+	selected = ""
+	_end_pointer()
+	queue_redraw()
+
+func _track_stroke(point: Vector2) -> void:
+	if not _gesture_active:
+		return
+	var from := _stroke_point
+	_stroke_distance += from.distance_to(point)
+	_stroke_excursion = maxf(_stroke_excursion, _stroke_origin.distance_to(point))
+	_stroke_point = point
+	if _started_on_core or from.distance_squared_to(point) < 0.25:
+		return
+	for edge in puzzle.bridges:
+		var ids: PackedStringArray = str(edge).split(":")
+		var a: Vector2 = centers[ids[0]]
+		var b: Vector2 = centers[ids[1]]
+		var axis := (b - a).normalized()
+		var padding := minf(radius + 1.0, a.distance_to(b) * 0.45)
+		var intersection: Variant = Geometry2D.segment_intersects_segment(from, point, a + axis * padding, b - axis * padding)
+		var last: float = float(_cut_sides.get(edge, signf((b - a).cross(from - a))))
+		var side := signf((b - a).cross(point - a))
+		if intersection is Vector2 and absf((point - from).normalized().dot(axis)) < 0.9:
+			_touching_bridge[edge] = true
+		if side != 0:
+			if last != 0 and last != side and _touching_bridge.has(edge):
+				_cut_candidates[edge] = true
+			_cut_sides[edge] = side
+			_touching_bridge.erase(edge)
+		elif not _cut_sides.has(edge):
+			_cut_sides[edge] = last
 	queue_redraw()
 
 func _connect_islands(a: String, b: String) -> void:
@@ -224,18 +322,24 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed and active_touch == -1:
+			_begin_pointer(event.position)
 			active_touch = event.index
-			pressed = _hit(event.position)
 		elif not event.pressed and event.index == active_touch:
 			if not event.canceled:
 				_release(event.position)
 			else:
-				pressed = ""
+				cancel_gesture()
 			active_touch = -1
+		accept_event()
+	elif event is InputEventScreenDrag and event.index == active_touch:
+		_track_stroke(event.position)
+		accept_event()
+	elif event is InputEventMouseMotion and active_touch == -1 and _gesture_active and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0 and event.device != -1:
+		_track_stroke(event.position)
 		accept_event()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != -1 and active_touch == -1:
 		if event.pressed:
-			pressed = _hit(event.position)
+			_begin_pointer(event.position)
 		else:
 			_release(event.position)
 		accept_event()

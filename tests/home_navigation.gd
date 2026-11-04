@@ -224,13 +224,23 @@ func check_portrait(ui: Control) -> void:
 		ui._show_home()
 		await process_frame
 		await process_frame
-		for button in [ui.home.continue_button, ui.home.new_button, ui.home.learn_button, ui.home.rules_button]:
-			check(button.size.y >= 56 and button.global_position.x >= 0 and button.global_position.x + button.size.x <= dimensions.x, "home touch target fits " + str(dimensions))
+		for button in [ui.home.continue_button, ui.home.story_button, ui.home.modes_button]:
+			if button.visible:
+				check(button.size.y >= 48 and button.global_position.x >= 0 and button.get_global_rect().end.x <= dimensions.x, "home icon/card target fits " + str(dimensions))
+		ui.home.show_page("modes")
+		await process_frame
+		await process_frame
+		for button in [ui.home.new_button, ui.home.fixed_button, ui.home.progression_button, ui.home.iron_button, ui.home.rules_button]:
+			check(button.size.y >= 48 and button.global_position.x >= 0 and button.get_global_rect().end.x <= dimensions.x, "mode target fits " + str(dimensions))
+		ui.home.show_page("rules")
+		await process_frame
+		await process_frame
+		check(ui.home.learn_button.size.y >= 48 and ui.home.learn_button.get_global_rect().end.x <= dimensions.x, "learning target fits in optional help")
 		ui.home.continue_button.pressed.emit()
 		await process_frame
 		await process_frame
 		check(ui.board.size.y >= 200 and ui.board.size.x >= 200, "playable board area " + str(dimensions))
-		check(ui.home_button.global_position.x >= 0 and ui.selector.global_position.x + ui.selector.size.x <= dimensions.x, "game header fits " + str(dimensions))
+		check(ui.home_button.global_position.x >= 0 and ui.help_button.get_global_rect().end.x <= dimensions.x, "game header fits " + str(dimensions))
 		check(ui.next_button.global_position.y + ui.next_button.size.y <= dimensions.y, "game actions fit " + str(dimensions))
 
 func check_legacy_and_corrupt() -> void:

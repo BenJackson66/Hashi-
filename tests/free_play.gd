@@ -94,7 +94,7 @@ func test_ui() -> void:
 		for count in int(solved.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
 			await settle_quality(ui)
-	check(not ui.next_button.disabled and ui.next_button.text == "Siguiente tablero", "victory enables direct next")
+	check(not ui.next_button.disabled and ui.next_button.tooltip_text == "Siguiente tablero", "victory enables direct next")
 	var before: Dictionary = ui.session.snapshot_data()
 	var bytes := FileAccess.get_file_as_string(ui.save_path)
 	var temporary := ProjectSettings.globalize_path(ui.save_path + ".tmp")
@@ -124,6 +124,6 @@ func test_ui() -> void:
 	check(ui.screen == "home", "Android Back from game opens home")
 	ui.home.rules_button.pressed.emit()
 	ui._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
-	check(ui.home.page == "home", "Android Back from rules opens home")
+	check(ui.home.page == "modes", "Android Back from rules returns to modes")
 	ui.queue_free()
 	await process_frame

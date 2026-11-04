@@ -9,7 +9,8 @@ const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
 const Quality = preload("res://scripts/hashi_quality.gd")
-const VERSION := 6
+const Attempts = preload("res://scripts/hashi_story_attempts.gd")
+const VERSION := 7
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -20,7 +21,7 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or int(data.version) not in [1, 2, 3, 4, 5, VERSION]:
+	if not _integer(data.version) or int(data.version) not in [1, 2, 3, 4, 5, 6, VERSION]:
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
@@ -39,6 +40,8 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 			return false
 	if data.version >= 6:
 		allowed.append("quality")
+	if data.version >= 7:
+		allowed.append("story_attempts")
 	for field in data:
 		if field not in allowed:
 			return false
@@ -78,9 +81,24 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 		return false
 	if data.boards.size() > known.size() or data.completed_ids.size() > known.size():
 		return false
+	if data.version >= 7:
+		var story_ids: Array = []
+		for id in known:
+			if Story.ordinal(data.story, id) >= 0:
+				story_ids.append(id)
+		if not Attempts.valid(data.get("story_attempts"), story_ids, data.boards):
+			return false
 	for id in data.boards:
 		if not id is String or not known.has(id) or not _valid_bridges(data.boards[id], known[id]):
 			return false
+	if data.version >= 7:
+		for id in data.story_attempts.levels:
+			var entry: Dictionary = data.story_attempts.levels[id]
+			if entry.left == 0 and not entry.lost:
+				var solved_board := Puzzle.new(known[id])
+				solved_board.bridges = data.boards[id].duplicate(true)
+				if not Rules.is_solved(solved_board):
+					return false
 	var completed := {}
 	for id in data.completed_ids:
 		if not id is String or not known.has(id) or completed.has(id):
@@ -184,6 +202,10 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
+	restored.story_attempts = parser.data.get("story_attempts", Attempts.fresh()).duplicate(true)
+	restored.story_attempts.version = 1
+	for id in restored.story_attempts.levels:
+		restored.story_attempts.levels[id].left = int(restored.story_attempts.levels[id].left)
 	restored.quality = parser.data.get("quality", Quality.fresh()).duplicate(true)
 	if parser.data.version < 6:
 		for id in parser.data.boards:
