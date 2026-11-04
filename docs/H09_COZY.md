@@ -47,3 +47,7 @@ Suite completa y CI se registran en PR/issue#19. No se afirma instalación/inter
 Un diagnóstico independiente forzado confirmó que el bloqueo previo de UI podía ignorar el siguiente toque mientras se comprobaba una posición. La edición, deshacer y rehacer ahora siguen disponibles con menos de8prefijos pendientes, salvo incertidumbre, error de escritura o intento terminado. El dominio ya conservaba el ordenFIFO; no se modifica Quality ni los solvers. Navegación, nuevo tablero y reinicio esperan a resolver los prefijos. Una victoria pendiente también espera antes de acreditar.
 
 Al pasar a bloqueo se cancela el gesto activo; un resize hace lo mismo. La espera no mueve el tablero mientras aún se puede editar. El probe34en una copia temporal instrumentada es diagnóstico adicional, no se suma a las190comprobaciones portables ni se incluye en el producto.
+
+## Candidato Android
+
+Fuente final: `999c7366549f46a674e143d0dd51c0b1ef5689ff`. Suite local completa correcta y CI [41870358520](https://github.com/BenJackson66/Hashi-/actions/runs/41870358520) correcta, incluidas las 190 comprobaciones independientes. Este commit de candidatura solo modifica documentación. Se autoriza la compilación agrupada 0.8.0 / versionCode 8, con la identidad Android existente. APK, firma e identidad histórica se verificarán antes de la entrega.
