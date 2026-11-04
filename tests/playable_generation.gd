@@ -52,6 +52,13 @@ func wait_ui(ui: Control) -> void:
 		await process_frame
 	check(ui.generation_task == null, "UI task completes")
 
+func settle_quality(ui: Control) -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not ui.session.quality.pending.is_empty() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	if not ui.session.quality.pending.is_empty():
+		check(false, "quality decision settles before next UI action")
+
 func run() -> void:
 	catalog = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
 	var task := Task.new()
@@ -207,10 +214,13 @@ func test_ui() -> void:
 	var b: Vector2 = ui.board.centers[edges[0].b]
 	touch(ui.board, a, true)
 	touch(ui.board, b, false)
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridge_count(edges[0].a, edges[0].b) == 1, "procedural swipe places bridge")
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridges.is_empty(), "procedural undo")
 	ui.redo_button.pressed.emit()
+	await settle_quality(ui)
 	check(ui.board.puzzle.bridge_count(edges[0].a, edges[0].b) == 1, "procedural redo")
 	var state: Dictionary = ui.session.snapshot_data()
 	ui.queue_free()
@@ -234,6 +244,7 @@ func test_ui() -> void:
 	ui._select_puzzle(3)
 	check(ui._request_new_puzzle(), "new request before gameplay")
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	var edited: Dictionary = ui.board.puzzle.bridges.duplicate()
 	await wait_ui(ui)
 	check(ui.board.puzzle.puzzle_id == id and ui.board.puzzle.bridges == edited, "gameplay during generation invalidates stale result")
@@ -248,10 +259,12 @@ func test_ui() -> void:
 	var solved := Solver.new().solve(ui.board.puzzle)
 	check(solved.status == "unique", "shown procedural is uniquely solvable")
 	ui.restart_button.pressed.emit()
+	await settle_quality(ui)
 	for edge in solved.solutions[0]:
 		var ids: PackedStringArray = edge.split(":")
 		for count in int(solved.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
+			await settle_quality(ui)
 	check(not ui.next_button.disabled and ui.next_button.text == "Siguiente tablero" and "resuelto" in ui.status.text, "procedural victory and return control")
 	check(id in ui.session.completed_ids and not contains_solution(ui.session.snapshot_data()), "procedural completion saved without hidden solution fields")
 	ui.next_button.pressed.emit()
@@ -263,9 +276,13 @@ func test_ui() -> void:
 	# Regression: a real previous procedural with bridges, completion and undo/redo.
 	ui._select_puzzle(3)
 	ui.restart_button.pressed.emit()
+	await settle_quality(ui)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	ui.undo_button.pressed.emit()
+	await settle_quality(ui)
 	var previous_state: Dictionary = ui.session.snapshot_data()
 	var previous_puzzle: RefCounted = ui.board.puzzle
 	var previous_past: Array = ui.board.history.past.duplicate(true)

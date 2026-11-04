@@ -11,10 +11,10 @@ func verify(value: bool, label: String) -> void:
 		failures += 1
 		printerr("MINERVA FAIL: ", label)
 func wait_worker(ui: Control) -> void:
-	var limit := Time.get_ticks_msec() + 6000
-	while ui.generation_task != null and Time.get_ticks_msec() < limit:
+	var limit := Time.get_ticks_msec() + 15000
+	while (ui.generation_task != null or not ui.session.quality.pending.is_empty()) and Time.get_ticks_msec() < limit:
 		await process_frame
-	verify(ui.generation_task == null, "worker finishes")
+	verify(ui.generation_task == null and ui.session.quality.pending.is_empty(), "worker finishes")
 func review() -> void:
 	var ui = Main.instantiate()
 	ui.save_path = "user://minerva-frontiers.json"
@@ -33,9 +33,12 @@ func review() -> void:
 			var ends: PackedStringArray = str(edge).split(":")
 			for repetition in int(answer.solutions[0][edge]):
 				ui.board._connect_islands(ends[0], ends[1])
+				await wait_worker(ui)
 		verify(ui.session.run.wins == index + 1, "one committed win")
 		ui.board.undo()
+		await wait_worker(ui)
 		ui.board.redo()
+		await wait_worker(ui)
 		verify(ui.session.run.wins == index + 1, "undo/redo cannot duplicate win")
 		if index in [2, 6]:
 			var state: Dictionary = ui.session.snapshot_data()

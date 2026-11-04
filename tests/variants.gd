@@ -70,9 +70,10 @@ func solve_ui(ui):
 		var ends: PackedStringArray = str(edge).split(":")
 		for n in int(result.solutions[0][edge]):
 			ui.board._connect_islands(ends[0], ends[1])
+			await settle(ui)
 func settle(ui):
 	var deadline := Time.get_ticks_msec() + 12000
-	while ui.generation_task != null and Time.get_ticks_msec() < deadline:
+	while (ui.generation_task != null or not ui.session.quality.pending.is_empty()) and Time.get_ticks_msec() < deadline:
 		await process_frame
 	check(ui.generation_task == null, "bounded worker")
 func integration():
@@ -123,16 +124,20 @@ func integration():
 					check(ui.board.island_fill(item) == Color("554478"), "empty mystery has no target feedback")
 		if ordinal == 20:
 			check("simples" in ui.mode_status.text and "sin número" in ui.mode_status.text, "combined legend visible")
-		solve_ui(ui)
+		await solve_ui(ui)
 		check(ui.session.story.frontier == ordinal + 1, "victory unlock once")
 		if ordinal in [12, 16, 20, 24]:
 			var before: Dictionary = ui.session.snapshot_data()
 			var store := Store.new(ui.save_path)
 			check(store.load_game(tutorials).story == before.story, "variant snapshot roundtrip")
-			ui.board.undo(); ui.board.redo()
+			ui.board.undo()
+			await settle(ui)
+			ui.board.redo()
+			await settle(ui)
 			check(ui.session.story.frontier == ordinal + 1, "undo redo no duplicate unlock")
 	var old: Dictionary = ui.session.snapshot_data()
 	old.version = 4
+	old.erase("quality")
 	old.story = {"version": 1, "policy": Policy.VERSION, "frontier": 0, "recipes": {}}
 	old.procedural = {}
 	old.boards = {str(tutorials[0].id): {}}

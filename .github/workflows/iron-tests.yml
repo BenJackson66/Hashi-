@@ -1,0 +1,27 @@
+name: Iron streaks tests
+on:
+  push:
+    branches: [feature/h07-iron-streaks]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install verified Godot 4.6.3 (no signing credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .local/test-engine
+          curl --fail --location --silent --show-error --retry 2 https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip -o .local/test-engine/godot.zip
+          printf '%s  %s\n' a035258da32b77f966a5376f9fa29c30a6adde826a85ba918e1605bd1fc9823eba7d85f1dd5e748956bd2ba72827c0025ffa11bb82aec91128c407a2e723c99c .local/test-engine/godot.zip | sha512sum --check --strict
+          unzip -q .local/test-engine/godot.zip -d .local/test-engine
+          mv .local/test-engine/Godot_v4.6.3-stable_linux.x86_64 .local/test-engine/godot
+          chmod +x .local/test-engine/godot
+          echo "$PWD/.local/test-engine" >> "$GITHUB_PATH"
+      - name: Rules, continuity, profiles and play modes
+        run: bash tests/run.sh

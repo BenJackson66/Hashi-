@@ -8,11 +8,18 @@ const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
 const StoryPolicy = preload("res://scripts/hashi_story_policy.gd")
 const StoryView = preload("res://scripts/hashi_story_view.gd")
+const Quality = preload("res://scripts/hashi_quality.gd")
+const QualityWorker = preload("res://scripts/hashi_quality_worker.gd")
 const Settings = preload("res://scripts/hashi_free_settings.gd")
 const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
 var story_view: StoryView
 var _request_story := -1
+var quality_worker: QualityWorker
+var quality_status: Label
+var quality_retry: Button
+var _quality_actions: Array = []
+var _quality_verdict: Dictionary = {}
 var settings: Settings
 var home: Home
 var game_view: MarginContainer
@@ -94,6 +101,13 @@ func _ready() -> void:
 	mode_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mode_status.add_theme_font_size_override("font_size", 14)
 	column.add_child(mode_status)
+	quality_status = Label.new()
+	quality_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quality_status.add_theme_font_size_override("font_size", 14)
+	column.add_child(quality_status)
+	quality_retry = _button("Reintentar comprobación", column, _retry_quality)
+	quality_retry.custom_minimum_size.y = 36
+	quality_retry.hide()
 	board = Board.new()
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(200, 200)
@@ -143,6 +157,9 @@ func _ready() -> void:
 	home.confirm_requested.connect(_confirm_new_puzzle)
 	home.cancel_requested.connect(_cancel_new_puzzle)
 	home.page_changed.connect(_on_home_page_changed)
+	quality_worker = QualityWorker.new()
+	quality_worker.host = self
+	add_child(quality_worker)
 	_display_current()
 	_show_home()
 	if not recovery_message.is_empty():
@@ -167,6 +184,8 @@ func _display_current() -> void:
 	_update_status("")
 
 func _select_puzzle(index: int) -> void:
+	if not session.quality.pending.is_empty():
+		return
 	if save_failed:
 		_save_game()
 		if save_failed:
@@ -184,6 +203,8 @@ func _select_puzzle(index: int) -> void:
 	_open_game()
 
 func _next_puzzle() -> void:
+	if not session.quality.pending.is_empty() or _iron_ended():
+		return
 	if not Rules.is_solved(board.puzzle):
 		return
 	if session.is_story():
@@ -242,6 +263,8 @@ func _ask_mode(mode: String, profile: String) -> void:
 	_ask_new_puzzle(Mode.fresh(mode, profile))
 
 func _ask_new_puzzle(requested_run: Dictionary = {}) -> void:
+	if not session.quality.pending.is_empty() or (_iron_ended() and requested_run.is_empty()):
+		return
 	if generation_task != null or _confirmation_pending or is_queued_for_deletion():
 		return
 	if save_failed:
@@ -282,11 +305,15 @@ func _confirm_new_puzzle() -> void:
 	_request_new_puzzle()
 
 func _on_puzzle_changed() -> void:
+	_quality_actions.append(board.last_action.duplicate(true))
 	_invalidate_generation()
 	_save_game()
 
 func _save_game() -> void:
-	save_failed = not session.capture_and_save(board.puzzle)
+	save_failed = not session.capture_and_save(board.puzzle, _quality_actions, _quality_verdict)
+	if not save_failed:
+		_quality_actions.clear()
+		_quality_verdict.clear()
 	_has_game = true
 	_update_status("")
 
@@ -353,10 +380,31 @@ func _update_status(message: String) -> void:
 		status.text = _generation_message
 	if save_failed:
 		status.text += " No se pudo guardar la partida."
+	var pending_quality: bool = not session.quality.pending.is_empty()
+	var ended := _iron_ended()
+	board.bridge_color = Color("f1c55b") if session.quality.streak >= 7 else (Color("a982e7") if session.quality.streak >= 3 else (Color("5db9ff") if session.quality.streak >= 1 else Color("aac4d1")))
+	board.queue_redraw()
+	board.input_enabled = not pending_quality and not ended and not save_failed
+	undo_button.disabled = undo_button.disabled or pending_quality or ended or save_failed
+	redo_button.disabled = redo_button.disabled or pending_quality or ended or save_failed
+	restart_button.disabled = pending_quality or ended or save_failed
+	next_button.disabled = next_button.disabled or pending_quality or ended or save_failed
+	new_board_button.disabled = new_board_button.disabled or pending_quality or ended or save_failed
+	selector.disabled = pending_quality
+	quality_status.text = "%s · Racha %d · Récord Alma %d" % [Quality.color_name(session.quality), int(session.quality.streak), int(session.quality.iron_record)]
+	quality_status.add_theme_color_override("font_color", Color("e5c45c") if session.quality.streak >= 7 else (Color("be9be9") if session.quality.streak >= 3 else Color("8acbff")))
+	quality_retry.visible = save_failed or (pending_quality and quality_worker != null and quality_worker.uncertain)
+	quality_retry.text = "Reintentar guardado" if save_failed else "Reintentar comprobación"
+	if pending_quality:
+		status.text = "Comprobando la racha… Puedes volver a Inicio."
+		if quality_worker != null and quality_worker.uncertain:
+			status.text = "Racha pendiente. Reintenta; tu progreso se conserva."
+	if ended:
+		status.text = "Alma terminó. Récord conservado. Nuevo desafío desde Inicio."
 	if story_view != null and screen == "story":
-		story_view.update_state(generation_task != null, status.text if generation_task != null or not _generation_message.is_empty() or save_failed else "")
+		story_view.update_state(generation_task != null or pending_quality, status.text if generation_task != null or pending_quality or not _generation_message.is_empty() or save_failed else "")
 	if home != null:
-		home.update_state(_has_game, generation_task != null, status.text if generation_task != null or not _generation_message.is_empty() or save_failed else "")
+		home.update_state(_has_game, generation_task != null or pending_quality, status.text if generation_task != null or pending_quality or not _generation_message.is_empty() or save_failed else "", pending_quality)
 
 func _sync_selector() -> void:
 	if selector.item_count != session.catalog.size():
@@ -367,7 +415,7 @@ func _sync_selector() -> void:
 		var definition: Dictionary = session.catalog[i]
 		var title := "%d · %s" % [i + 1, definition.title] if i < session.base_catalog.size() else str(definition.title)
 		if session.procedural.has(str(definition.id)) and session.run.mode != "free":
-			title = ("Fija" if session.run.mode == "fixed" else "Progresión") + " · " + ("Directo" if session.run.board_profile == "local" else "Reflexivo")
+			title = ({"fixed": "Fija", "iron": "Alma", "progression": "Progresión"}[session.run.mode]) + " · " + ("Directo" if session.run.board_profile == "local" else "Reflexivo")
 		var ordinal := Story.ordinal(session.story, str(definition.id))
 		if ordinal >= 0:
 			title = "Historia · " + StoryCatalog.title(ordinal)
@@ -461,6 +509,8 @@ func _show_story() -> void:
 	_update_status("")
 
 func _select_story(ordinal: int) -> void:
+	if not session.quality.pending.is_empty():
+		return
 	if generation_task != null or ordinal < 0 or ordinal > int(session.story.frontier):
 		return
 	if save_failed:
@@ -487,3 +537,18 @@ func _select_story(ordinal: int) -> void:
 func _next_story_ordinal() -> int:
 	var following := session.story_ordinal() + 1
 	return following if session.story_index(following) >= 0 else int(session.story.frontier)
+
+func _iron_ended() -> bool:
+	return session != null and session.is_procedural() and session.run.mode == "iron" and session.quality.iron_ended
+func _accept_quality_verdict(verdict: Dictionary) -> void:
+	if verdict.status in ["viable", "impossible"]:
+		_quality_verdict = verdict.duplicate(true)
+		_save_game()
+	else:
+		_update_status("")
+func _retry_quality() -> void:
+	if save_failed:
+		_save_game()
+	if quality_worker != null and not save_failed:
+		quality_worker.retry()
+	_update_status("")

@@ -99,6 +99,7 @@ func transactions():
 		var legacy := Session.new(tutorials, path).snapshot_data()
 		legacy.version = version
 		legacy.erase("story")
+		legacy.erase("quality")
 		if version < 3:
 			legacy.erase("run")
 		if version < 2:

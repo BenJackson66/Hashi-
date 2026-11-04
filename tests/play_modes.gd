@@ -43,6 +43,13 @@ func write_json(path: String, value: Dictionary) -> void:
 	file.store_string(JSON.stringify(value))
 	file.close()
 
+func settle_quality(ui: Control) -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not ui.session.quality.pending.is_empty() and Time.get_ticks_msec() < deadline:
+		await process_frame
+	if not ui.session.quality.pending.is_empty():
+		check(false, "quality decision settles before next UI action")
+
 func run() -> void:
 	catalog = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
 	var progression := Mode.fresh("progression")
@@ -98,6 +105,7 @@ func test_transactions() -> void:
 	legacy.version = 2
 	legacy.erase("run")
 	legacy.erase("story")
+	legacy.erase("quality")
 	var id: String = legacy.procedural.keys()[0]
 	legacy.completed_ids.append(id)
 	write_json(path, legacy)
@@ -138,6 +146,7 @@ func test_ui() -> void:
 	check(ui.settings.profile == "local" and Mode.next_profile(ui.session.run, ui.settings.profile) == "contradiction1", "free preference independent of active fixed run")
 	var edges := Solver.candidate_edges(ui.board.puzzle)
 	ui.board._connect_islands(edges[0].a, edges[0].b)
+	await settle_quality(ui)
 	var before: Dictionary = ui.session.snapshot_data()
 	ui._show_home()
 	ui.home.progression_button.pressed.emit()
@@ -157,6 +166,7 @@ func test_ui() -> void:
 			if n == keys.size() - 1 and count == int(solution[keys[n]]) - 1:
 				DirAccess.make_dir_absolute(ProjectSettings.globalize_path(ui.save_path + ".tmp"))
 			ui.board._connect_islands(ids[0], ids[1])
+			await settle_quality(ui)
 	check(ui.save_failed and Rules.is_solved(ui.board.puzzle) and ui.session.run.wins == 0, "uncommitted winning move retains Board, not credit")
 	ui._next_puzzle()
 	check(ui.generation_task == null and ui.next_button.disabled, "Next cannot consume uncommitted victory")
@@ -183,6 +193,7 @@ func test_ui() -> void:
 	DirAccess.make_dir_absolute(temporary)
 	var edge: Dictionary = Solver.candidate_edges(ui.board.puzzle)[0]
 	ui.board._connect_islands(edge.a, edge.b)
+	await settle_quality(ui)
 	var dirty: Dictionary = ui.board.puzzle.bridges.duplicate(true)
 	ui._select_puzzle(0)
 	check(ui.save_failed and ui.session.is_procedural() and ui.board.puzzle.bridges == dirty, "ordinary failed move survives attempted selection")
