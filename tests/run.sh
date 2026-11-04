@@ -27,5 +27,8 @@ timeout 60s godot --headless --path . --script tests/mode_stage_boundaries.gd
 timeout 90s godot --headless --path . --script tests/story.gd
 timeout 90s godot --headless --path . --script tests/story_stage_boundaries.gd
 timeout 90s godot --headless --path . --script tests/story_errors.gd
+timeout 90s godot --headless --path . --script tests/variant_oracle.gd
+timeout 90s godot --headless --path . --script tests/variants.gd
+timeout 90s godot --headless --path . --script tests/variant_migration_review.gd
 python3 tests/signing_security.py
 

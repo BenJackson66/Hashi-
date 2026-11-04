@@ -1,13 +1,14 @@
 class_name HashiSaveStore
 extends RefCounted
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
-const Rules = preload("res://scripts/hashi_rules.gd")
+const Rules = preload("res://scripts/hashi_rule_set.gd")
+const VariantRecipe = preload("res://scripts/hashi_variant_recipe.gd")
 const Generator = preload("res://scripts/hashi_generator.gd")
 const Solver = preload("res://scripts/hashi_solver.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
 const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
-const VERSION := 4
+const VERSION := 5
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -18,7 +19,7 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or int(data.version) not in [1, 2, 3, VERSION]:
+	if not _integer(data.version) or int(data.version) not in [1, 2, 3, 4, VERSION]:
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
@@ -59,7 +60,7 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 		for ordinal in data.story.recipes:
 			var recipe: Dictionary = data.story.recipes[ordinal]
 			var id: String = str(recipe.puzzle.get("id", ""))
-			if known.has(id) or normalize_recipe(id, recipe).is_empty():
+			if known.has(id) or normalize_story_recipe(id, recipe).is_empty() or not _story_kind_matches(data.story, int(ordinal), recipe):
 				return false
 			known[id] = recipe.puzzle
 		if Story.ordinal(data.story, data.current_puzzle_id) >= 0 and not Story.unlocked(data.story, data.current_puzzle_id):
@@ -174,12 +175,10 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
-	restored.story = parser.data.get("story", Story.fresh()).duplicate(true)
-	restored.story.frontier = int(restored.story.frontier)
-	restored.story.version = 1
+	restored.story = Story.migrate(parser.data.get("story", Story.fresh()))
 	for ordinal in restored.story.recipes:
 		var recipe: Dictionary = restored.story.recipes[ordinal]
-		restored.story.recipes[ordinal] = normalize_recipe(str(recipe.puzzle.id), recipe)
+		restored.story.recipes[ordinal] = normalize_story_recipe(str(recipe.puzzle.id), recipe)
 	restored.run = parser.data.get("run", Mode.fresh()).duplicate(true)
 	restored.run.wins = int(restored.run.wins)
 	restored.run.version = Mode.VERSION
@@ -224,3 +223,11 @@ func save_game(data: Dictionary, catalog: Array) -> bool:
 		return false
 	return true
 
+
+func normalize_story_recipe(id: String, recipe: Variant) -> Dictionary:
+	if recipe is Dictionary and recipe.get("algorithm_version") == VariantRecipe.VERSION:
+		return VariantRecipe.normalize(id, recipe)
+	return normalize_recipe(id, recipe)
+func _story_kind_matches(story: Dictionary, ordinal: int, recipe: Dictionary) -> bool:
+	var expected := Story.kind(story, ordinal)
+	return recipe.get("algorithm_version") == Generator.ALGORITHM_VERSION if expected == "classic" else recipe.get("algorithm_version") == VariantRecipe.VERSION and recipe.get("parameters", {}).get("kind") == expected

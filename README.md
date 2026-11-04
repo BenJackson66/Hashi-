@@ -1,14 +1,15 @@
-## Estado actual — 0.4.0
+## Estado actual — candidata 0.5.0
 
-Historia ofrece 12 niveles iniciales en tres etapas, desbloqueo y continuación clásica indefinida por etapas. Conserva los 12 iniciales y los cuatro niveles más recientes de la ruta continua. Su progreso es independiente de las series fija/progresión. Las variantes azules y misteriosas siguen pendientes.
+Historia incorpora etapas de islas azules, misteriosas y combinadas, después de los 12 niveles clásicos iniciales. Las azules, marcadas S, solo admiten puentes simples y conservan su número. Las misteriosas muestran ? y no tienen número secreto: sus conexiones se deducen de las otras islas y de conectar toda la red. La ruta continúa por etapas de cuatro, con una etapa clásica después de las combinadas.
 
-El guardado actual es v4 y lee v1/v2/v3. Abrir una partida antigua no reescribe el archivo; la migración ocurre al siguiente guardado válido. Véase [H05-A](docs/H05A_STORY.md). Las secciones siguientes documentan entregas anteriores.
+Las partidas anteriores conservan recetas y puentes exactos: las nuevas reglas empiezan en la siguiente etapa futura. El guardado actual es v5 y lee v1/v2/v3/v4; abrir no reescribe el archivo. Las series libre/fija/progresión siguen usando reglas y perfiles clásicos. Véase [H06: variantes visibles](docs/H06_VARIANTS.md).
+
 
 # Hashi — partida libre y desafíos provisionales
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
 
-**Candidata actual: 0.3.0 / código Android 3.** Añade nuevas series de Dificultad fija y Progresión automática; Continuar recupera modo, tablero y progreso juntos. Progresión ofrece tres tableros Directo, cuatro alternados Directo/Reflexivo y después Reflexivo continuo. El guardado actual es **v3**, compatible en lectura con v1/v2; abrir no reescribe la partida anterior. El siguiente guardado válido migra el contenido completo de forma atómica. Ver [H04: modos, migración y validación](docs/H04_PLAY_MODES.md). Las secciones H02/H03 siguientes describen entregas históricas.
+**Entrega histórica H04: 0.3.0 / código Android 3.** Añade nuevas series de Dificultad fija y Progresión automática; Continuar recupera modo, tablero y progreso juntos. Progresión ofrece tres tableros Directo, cuatro alternados Directo/Reflexivo y después Reflexivo continuo. El guardado de esa entrega es **v3**, compatible en lectura con v1/v2; abrir no reescribe la partida anterior. El siguiente guardado válido migra el contenido completo de forma atómica. Ver [H04: modos, migración y validación](docs/H04_PLAY_MODES.md). Las secciones H02/H03 siguientes describen entregas históricas.
 
 
 ## Abrir y jugar
@@ -16,7 +17,7 @@ Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador 
 1. Instala Godot 4.x estándar (no necesita .NET).
 2. Importa `project.godot` desde el gestor de proyectos y pulsa **F6/F5** para ejecutar la escena/proyecto. La escena principal es `scenes/main.tscn`.
 3. La aplicación abre en **Inicio**. Usa **Continuar partida** para recuperar la última selección, **Aprender a jugar** para elegir cualquiera de los tres tableros, **Cómo jugar** para consultar las reglas o **Nuevo tablero** para generar un procedural variado del perfil elegido en segundo plano. Toca una isla y luego otra, o arrastra desde una isla hasta la otra. Con ratón funcionan clics y arrastre.
-4. Cada gesto alterna **0 → 1 → 2 → 0** puentes. Los puentes deben unir vecinos horizontales/verticales y nunca cruzarse ni atravesar islas.
+4. Cada gesto alterna **0 → 1 → 2 → 0** puentes; si toca una azul S, alterna **0 → 1 → 0**. Los puentes deben unir vecinos horizontales/verticales y nunca cruzarse ni atravesar islas.
 5. Completa el número de cada isla y conecta toda la red para obtener la victoria. **Reiniciar** borra los puentes del tablero actual y se puede deshacer. Cambiar de tablero conserva los puentes de cada nivel.
 
 Las advertencias empiezan desactivadas. Al activarlas, las islas con exceso de puentes se marcan en rojo y aparece un mensaje. Los excesos numéricos se permiten durante la exploración, pero impiden ganar; las conexiones geométricamente imposibles siempre se rechazan. Verde indica que una isla tiene su grado completo, no que toda la solución sea correcta.
@@ -32,7 +33,7 @@ En Linux restringido, usa `./tools/dev.sh` para jugar o `./tools/dev.sh --editor
 - `scripts/hashi_home.gd` — presentación independiente de Inicio, aprendizaje, reglas y confirmación; comunica acciones mediante señales.
 - `data/puzzles.json` — Inicio (4 islas), Conexiones (9), Cruces (12). Complejidad creciente por tamaño y conexiones candidatas; no se afirma una clasificación de dificultad lógica.
 
-El historial, la secuencia y el guardado están separados en `HashiHistory`, `HashiSequence`, `HashiSession` y `HashiSaveStore`. El guardado automático conserva el tablero actual, los puentes de los tableros visitados y los niveles completados en `user://hashi-save-v1.json`. Los metadatos de variantes y los IDs dejan puntos de extensión para colores, generación y un solucionador. La lógica de H02-B está integrada mediante Nuevo tablero desde H02-C. Se conserva un procedural reciente, con su receta, ID y puentes, además de los tres tableros prediseñados. **Las variantes por color y las futuras modalidades aún no están implementadas**. El enumerador de referencia se mantiene en pruebas; el solucionador independiente de H02-B verifica la unicidad antes de presentar un procedural.
+El historial, la secuencia y el guardado están separados en `HashiHistory`, `HashiSequence`, `HashiSession` y `HashiSaveStore`. El guardado automático conserva el tablero actual, los puentes de los tableros visitados y los niveles completados en `user://hashi-save-v1.json`. Los metadatos de variantes y los IDs dejan puntos de extensión para colores, generación y un solucionador. La lógica de H02-B está integrada mediante Nuevo tablero desde H02-C. Se conserva un procedural reciente, con su receta, ID y puentes, además de los tres tableros prediseñados. La entrega H06 incorpora variantes en Historia mediante reglas y solver separados. El enumerador de referencia se mantiene en pruebas; el solucionador independiente de H02-B verifica la unicidad antes de presentar un procedural.
 
 ## Pruebas
 

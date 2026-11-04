@@ -1,6 +1,6 @@
 extends Control
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
-const Rules = preload("res://scripts/hashi_rules.gd")
+const Rules = preload("res://scripts/hashi_rule_set.gd")
 const Board = preload("res://scripts/hashi_board.gd")
 const Session = preload("res://scripts/hashi_session.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
@@ -25,6 +25,7 @@ var puzzles: Array = []
 var board: Board
 var session: Session
 var mode_status: Label
+var gesture_hint: Label
 var _pending_run: Dictionary = {}
 var _request_run: Dictionary = {}
 var status: Label
@@ -84,6 +85,7 @@ func _ready() -> void:
 		selector.add_item("%d · %s" % [i + 1, puzzles[i].title])
 	header.add_child(selector)
 	var hint := Label.new()
+	gesture_hint = hint
 	hint.text = "Toca dos islas o desliza entre ellas.\nPuentes: 0 → 1 → 2 → 0. Une toda la red."
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -309,6 +311,11 @@ func _notification(what: int) -> void:
 
 func _update_status(message: String) -> void:
 	var solved := Rules.is_solved(board.puzzle)
+	if gesture_hint != null:
+		var has_blue := false
+		for item in board.puzzle.islands:
+			has_blue = has_blue or item.get("variant") == "blue"
+		gesture_hint.text = "Toca dos islas o desliza entre ellas.\nS: 0 → 1 → 0 · Otras: 0 → 1 → 2 → 0" if has_blue else "Toca dos islas o desliza entre ellas.\nPuentes: 0 → 1 → 2 → 0. Une toda la red."
 	undo_button.disabled = board.history.past.is_empty()
 	redo_button.disabled = board.history.future.is_empty()
 	next_button.disabled = not solved or generation_task != null or save_failed
@@ -318,6 +325,9 @@ func _update_status(message: String) -> void:
 	mode_status.visible = session.is_procedural() or session.is_story()
 	mode_status.text = ("Historia · " + StoryCatalog.title(session.story_ordinal()) + " · " + ("Directo" if StoryPolicy.profile(session.story_ordinal()) == "local" else "Reflexivo")) if session.is_story() else Mode.description(session.run)
 	if session.is_story():
+		var kind := Story.kind(session.story, session.story_ordinal())
+		if kind != "classic":
+			mode_status.text = "Historia · " + StoryCatalog.title(session.story_ordinal()) + " · " + {"blue": "Azules: S = puentes simples", "mystery": "?: sin número; conecta toda la red", "combined": "S: simples · ?: sin número"}[kind]
 		next_button.text = "Continuar ruta" if _next_story_ordinal() > session.story_ordinal() + 1 else "Siguiente nivel"
 	_sync_selector()
 	if solved:
@@ -332,7 +342,7 @@ func _update_status(message: String) -> void:
 	elif board.warnings_enabled:
 		status.text = "Sin excesos. Comprueba los números y la conexión."
 		for item in board.puzzle.islands:
-			if board.puzzle.degree(str(item.id)) > int(item.target):
+			if item.get("variant", "classic") != "mystery" and board.puzzle.degree(str(item.id)) > int(item.target):
 				status.text = "Hay islas con más puentes de los indicados."
 				break
 	else:
@@ -467,7 +477,7 @@ func _select_story(ordinal: int) -> void:
 	_request_epoch = _generation_epoch
 	_request_story = ordinal
 	generation_task = GenerationTask.new()
-	if not generation_task.start_story(ordinal, generation_options, Story.definitions(session.story)):
+	if not generation_task.start_story(ordinal, generation_options, Story.definitions(session.story), int(session.story.variant_from)):
 		generation_task = null
 		_generation_message = "No se pudo iniciar el nivel. Inténtalo de nuevo."
 	else:

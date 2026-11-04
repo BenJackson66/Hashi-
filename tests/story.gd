@@ -6,6 +6,7 @@ const Session = preload("res://scripts/hashi_session.gd")
 const Store = preload("res://scripts/hashi_save_store.gd")
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
 const Solver = preload("res://scripts/hashi_solver.gd")
+const VariantSolver = preload("res://scripts/hashi_variant_solver.gd")
 const Logical = preload("res://scripts/hashi_logical_profile.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Free = preload("res://scripts/hashi_free_play.gd")
@@ -21,7 +22,7 @@ func check(value: bool, label: String):
 		failures += 1
 		printerr("STORY FAIL: ", label)
 func solution(puzzle: Puzzle) -> Puzzle:
-	var result := Solver.new().solve(puzzle)
+	var result: Dictionary = Solver.new().solve(puzzle) if puzzle.ruleset == "classic-1" else VariantSolver.new().solve(puzzle)
 	check(result.status == "unique", "unique solution")
 	puzzle.bridges = result.solutions[0].duplicate(true)
 	return puzzle
@@ -70,7 +71,7 @@ func transactions():
 		check(session.capture_and_save(solution(session.current_puzzle())), "intro victory " + str(ordinal))
 	var seen: Array = []
 	for ordinal in range(12, 22):
-		var result := Policy.generate(ordinal, {}, State.definitions(session.story))
+		var result := Policy.generate(ordinal, {}, State.definitions(session.story), int(session.story.variant_from))
 		check(result.status == "success", "tail generated " + str(ordinal))
 		if result.status != "success":
 			return
@@ -78,7 +79,7 @@ func transactions():
 		check(fingerprint not in seen, "tail clues distinct across repeated profiles")
 		seen.append(fingerprint)
 		if ordinal == 12:
-			var repeat := Policy.generate(ordinal, {}, State.definitions(session.story))
+			var repeat := Policy.generate(ordinal, {}, State.definitions(session.story), int(session.story.variant_from))
 			check(repeat.recipe == result.recipe, "deterministic continuation recipe")
 			before = session.snapshot_data()
 			DirAccess.make_dir_absolute(temp)

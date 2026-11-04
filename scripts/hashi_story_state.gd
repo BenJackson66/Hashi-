@@ -3,7 +3,7 @@ extends RefCounted
 const Catalog = preload("res://scripts/hashi_story_catalog.gd")
 const Policy = preload("res://scripts/hashi_story_policy.gd")
 static func fresh() -> Dictionary:
-	return {"version": 1, "policy": Policy.VERSION, "frontier": 0, "recipes": {}}
+	return {"version": 2, "policy": "visible-route-1", "frontier": 0, "recipes": {}, "variant_from": Catalog.COUNT}
 static func ordinal(state: Dictionary, id: String) -> int:
 	var intro := Catalog.intro_ordinal(id)
 	if intro >= 0:
@@ -28,9 +28,17 @@ static func definitions(state: Dictionary) -> Array:
 		result.append(state.recipes[key].puzzle.duplicate(true))
 	return result
 static func valid(value: Variant) -> bool:
-	if not value is Dictionary or value.size() != 4 or not value.has_all(["version", "policy", "frontier", "recipes"]):
+	if not value is Dictionary or not value.has_all(["version", "policy", "frontier", "recipes"]):
 		return false
-	if value.version != 1 or value.policy != Policy.VERSION or not (value.frontier is int or value.frontier is float) or not is_finite(float(value.frontier)) or float(value.frontier) != floor(float(value.frontier)) or value.frontier < 0 or value.frontier > Policy.MAX_ORDINAL:
+	if value.version == 1:
+		if value.size() != 4 or value.policy != Policy.VERSION:
+			return false
+	elif value.version == 2:
+		if value.size() != 5 or value.policy != "visible-route-1" or not value.has("variant_from") or not _integer(value.variant_from) or value.variant_from < Catalog.COUNT or int(value.variant_from) % Catalog.STAGE_SIZE != 0 or value.variant_from > Policy.MAX_ORDINAL:
+			return false
+	else:
+		return false
+	if not _integer(value.frontier) or value.frontier < 0 or value.frontier > Policy.MAX_ORDINAL:
 		return false
 	if not value.recipes is Dictionary or value.recipes.size() > Catalog.WINDOW:
 		return false
@@ -40,3 +48,18 @@ static func valid(value: Variant) -> bool:
 		if not value.recipes[key] is Dictionary or not value.recipes[key].get("puzzle") is Dictionary:
 			return false
 	return true
+
+static func _integer(value: Variant) -> bool:
+	return (value is int or value is float) and is_finite(float(value)) and float(value) == floor(float(value))
+static func migrate(value: Dictionary) -> Dictionary:
+	var result := value.duplicate(true)
+	if int(result.version) == 1:
+		result.version = 2
+		result.policy = "visible-route-1"
+		result.variant_from = maxi(Catalog.COUNT, (int(result.frontier) / Catalog.STAGE_SIZE + 1) * Catalog.STAGE_SIZE)
+	result.version = 2
+	result.frontier = int(result.frontier)
+	result.variant_from = int(result.variant_from)
+	return result
+static func kind(state: Dictionary, ordinal_value: int) -> String:
+	return Policy.kind_at(ordinal_value, int(state.get("variant_from", -1)))

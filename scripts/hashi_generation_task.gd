@@ -57,14 +57,14 @@ func finish_on_shutdown() -> void:
 	_result.clear()
 	_mutex.unlock()
 
-func start_story(ordinal: int, parameters: Dictionary, excluded: Array = []) -> bool:
+func start_story(ordinal: int, parameters: Dictionary, excluded: Array = [], variant_from: int = -1) -> bool:
 	if _task_id != -1:
 		return false
-	_task_id = WorkerThreadPool.add_task(_generate_story.bind(ordinal, parameters.duplicate(true), excluded.duplicate(true)), false, "Hashi story")
+	_task_id = WorkerThreadPool.add_task(_generate_story.bind(ordinal, parameters.duplicate(true), excluded.duplicate(true), variant_from), false, "Hashi story")
 	return _task_id != -1
 
-func _generate_story(ordinal: int, parameters: Dictionary, excluded: Array) -> void:
-	var result := StoryPolicy.generate(ordinal, parameters, excluded)
+func _generate_story(ordinal: int, parameters: Dictionary, excluded: Array, variant_from: int) -> void:
+	var result := StoryPolicy.generate(ordinal, parameters, excluded, variant_from)
 	_mutex.lock()
 	_result = result
 	_mutex.unlock()

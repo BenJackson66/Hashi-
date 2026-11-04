@@ -30,10 +30,13 @@ func refresh(state: Dictionary, completed_ids: Array) -> void:
 	message = Label.new()
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(message)
-	_label("Historia · Ruta clásica", 26)
+	_label("Historia", 26)
 	_label("Etapas de cuatro niveles. Resuelve uno para desbloquear el siguiente.")
 	_label("Se conservan los 12 iniciales y los 4 niveles más recientes de la ruta continua.")
 	var current := int(state.frontier)
+	var kind := Story.kind(state, current)
+	if kind != "classic":
+		_label({"blue": "Azules · S: solo puentes simples. El número sigue contando todos los puentes.", "mystery": "Misteriosas · ?: sin número. Su cantidad de puentes se deduce de las otras islas y de conectar toda la red.", "combined": "Combinadas · S: solo puentes simples. ?: sin número. Une toda la red."}[kind])
 	follow_button = _button("Seguir · " + Catalog.title(current), func(): selected.emit(current))
 	follow_button.name = "FollowStory"
 	for ordinal in Catalog.COUNT:

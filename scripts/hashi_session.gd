@@ -1,7 +1,7 @@
 class_name HashiSession
 extends RefCounted
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
-const Rules = preload("res://scripts/hashi_rules.gd")
+const Rules = preload("res://scripts/hashi_rule_set.gd")
 const Sequence = preload("res://scripts/hashi_sequence.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
 const Story = preload("res://scripts/hashi_story_state.gd")
@@ -189,7 +189,7 @@ func install_story_and_save(ordinal: int, recipe: Dictionary) -> bool:
 	if ordinal < StoryCatalog.COUNT or ordinal != int(story.frontier) or story_index(ordinal) >= 0:
 		return false
 	var id: String = str(recipe.get("puzzle", {}).get("id", ""))
-	if store.normalize_recipe(id, recipe).is_empty():
+	if store.normalize_story_recipe(id, recipe).is_empty() or not store._story_kind_matches(story, ordinal, recipe):
 		return false
 	for definition in catalog:
 		if definition.id == id:

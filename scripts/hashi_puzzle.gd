@@ -2,12 +2,14 @@ class_name HashiPuzzle
 extends RefCounted
 ## UI-independent state. Stable IDs and metadata leave room for variants and saves.
 ## No generation, solving, persistence or variant behavior is implemented here.
+var ruleset: String
 var puzzle_id: String
 var title: String
 var islands: Array = []
 var bridges: Dictionary = {}
 
 func _init(data: Dictionary = {}) -> void:
+	ruleset = str(data.get("ruleset", "classic-1"))
 	puzzle_id = str(data.get("id", ""))
 	title = str(data.get("title", ""))
 	islands = data.get("islands", []).duplicate(true)
