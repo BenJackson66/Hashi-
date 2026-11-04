@@ -2,6 +2,7 @@ class_name HashiGenerationTask
 extends RefCounted
 ## One task, one generator, copied inputs and a mutex-protected handoff.
 const FreePlay = preload("res://scripts/hashi_free_play.gd")
+const StoryPolicy = preload("res://scripts/hashi_story_policy.gd")
 const Generator = preload("res://scripts/hashi_generator.gd")
 var _task_id := -1
 var _mutex := Mutex.new()
@@ -54,4 +55,16 @@ func finish_on_shutdown() -> void:
 		_task_id = -1
 	_mutex.lock()
 	_result.clear()
+	_mutex.unlock()
+
+func start_story(ordinal: int, parameters: Dictionary, excluded: Array = []) -> bool:
+	if _task_id != -1:
+		return false
+	_task_id = WorkerThreadPool.add_task(_generate_story.bind(ordinal, parameters.duplicate(true), excluded.duplicate(true)), false, "Hashi story")
+	return _task_id != -1
+
+func _generate_story(ordinal: int, parameters: Dictionary, excluded: Array) -> void:
+	var result := StoryPolicy.generate(ordinal, parameters, excluded)
+	_mutex.lock()
+	_result = result
 	_mutex.unlock()

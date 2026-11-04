@@ -1,0 +1,1326 @@
+[
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-01",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 2,
+					"variant": "classic",
+					"x": 6,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 4,
+					"variant": "classic",
+					"x": 2,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 3,
+					"variant": "classic",
+					"x": 5,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 4,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i12",
+					"target": 4,
+					"variant": "classic",
+					"x": 3,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i13",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i14",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i15",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 6
+				}
+			],
+			"title": "Etapa 1 · Nivel 1"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-02",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 4,
+					"variant": "classic",
+					"x": 2,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 5,
+					"variant": "classic",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 6,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 1,
+					"variant": "classic",
+					"x": 5,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 5
+				}
+			],
+			"title": "Etapa 1 · Nivel 2"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-03",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 3,
+					"variant": "classic",
+					"x": 3,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 4,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 5,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 4,
+					"variant": "classic",
+					"x": 2,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 4
+				}
+			],
+			"title": "Etapa 1 · Nivel 3"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-04",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 1,
+					"variant": "classic",
+					"x": 3,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 3,
+					"variant": "classic",
+					"x": 3,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 1,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 1,
+					"variant": "classic",
+					"x": 1,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 6,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 4,
+					"variant": "classic",
+					"x": 3,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 5,
+					"variant": "classic",
+					"x": 4,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i12",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i13",
+					"target": 6,
+					"variant": "classic",
+					"x": 4,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i14",
+					"target": 3,
+					"variant": "classic",
+					"x": 6,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i15",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 6
+				}
+			],
+			"title": "Etapa 1 · Nivel 4"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-05",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 1,
+					"variant": "classic",
+					"x": 3,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 1,
+					"variant": "classic",
+					"x": 5,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 3,
+					"variant": "classic",
+					"x": 3,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 5,
+					"variant": "classic",
+					"x": 4,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 3,
+					"variant": "classic",
+					"x": 5,
+					"y": 5
+				}
+			],
+			"title": "Etapa 2 · Nivel 1"
+		}
+	},
+	{
+		"profile": "contradiction1",
+		"puzzle": {
+			"id": "story-classic-v1-06",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 1,
+					"variant": "classic",
+					"x": 3,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 5,
+					"variant": "classic",
+					"x": 3,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 4,
+					"variant": "classic",
+					"x": 4,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 4,
+					"variant": "classic",
+					"x": 3,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 5,
+					"variant": "classic",
+					"x": 4,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 1,
+					"variant": "classic",
+					"x": 1,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 4
+				}
+			],
+			"title": "Etapa 2 · Nivel 2"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-07",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 2,
+					"variant": "classic",
+					"x": 6,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 5,
+					"variant": "classic",
+					"x": 2,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 3,
+					"variant": "classic",
+					"x": 6,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 1,
+					"variant": "classic",
+					"x": 3,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 5,
+					"variant": "classic",
+					"x": 3,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 6,
+					"variant": "classic",
+					"x": 4,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i12",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i13",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 6
+				},
+				{
+					"color": "neutral",
+					"id": "i14",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 6
+				},
+				{
+					"color": "neutral",
+					"id": "i15",
+					"target": 4,
+					"variant": "classic",
+					"x": 3,
+					"y": 6
+				}
+			],
+			"title": "Etapa 2 · Nivel 3"
+		}
+	},
+	{
+		"profile": "contradiction1",
+		"puzzle": {
+			"id": "story-classic-v1-08",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 4,
+					"variant": "classic",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 4,
+					"variant": "classic",
+					"x": 2,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 5
+				}
+			],
+			"title": "Etapa 2 · Nivel 4"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-09",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 6,
+					"variant": "classic",
+					"x": 2,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 5,
+					"variant": "classic",
+					"x": 3,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 3,
+					"variant": "classic",
+					"x": 5,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 4,
+					"variant": "classic",
+					"x": 1,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 3,
+					"variant": "classic",
+					"x": 2,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 1,
+					"variant": "classic",
+					"x": 5,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 5
+				}
+			],
+			"title": "Etapa 3 · Nivel 1"
+		}
+	},
+	{
+		"profile": "contradiction1",
+		"puzzle": {
+			"id": "story-classic-v1-10",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 1,
+					"variant": "classic",
+					"x": 1,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 5,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 1,
+					"variant": "classic",
+					"x": 5,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 2,
+					"variant": "classic",
+					"x": 3,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 5
+				}
+			],
+			"title": "Etapa 3 · Nivel 2"
+		}
+	},
+	{
+		"profile": "local",
+		"puzzle": {
+			"id": "story-classic-v1-11",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 3,
+					"variant": "classic",
+					"x": 5,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 1,
+					"variant": "classic",
+					"x": 3,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 3
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 1,
+					"variant": "classic",
+					"x": 0,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 5,
+					"variant": "classic",
+					"x": 1,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 3,
+					"variant": "classic",
+					"x": 3,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 3,
+					"variant": "classic",
+					"x": 4,
+					"y": 5
+				}
+			],
+			"title": "Etapa 3 · Nivel 3"
+		}
+	},
+	{
+		"profile": "contradiction1",
+		"puzzle": {
+			"id": "story-classic-v1-12",
+			"islands": [
+				{
+					"color": "neutral",
+					"id": "i00",
+					"target": 3,
+					"variant": "classic",
+					"x": 0,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i01",
+					"target": 3,
+					"variant": "classic",
+					"x": 1,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i02",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 0
+				},
+				{
+					"color": "neutral",
+					"id": "i03",
+					"target": 2,
+					"variant": "classic",
+					"x": 0,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i04",
+					"target": 2,
+					"variant": "classic",
+					"x": 5,
+					"y": 1
+				},
+				{
+					"color": "neutral",
+					"id": "i05",
+					"target": 2,
+					"variant": "classic",
+					"x": 4,
+					"y": 2
+				},
+				{
+					"color": "neutral",
+					"id": "i06",
+					"target": 2,
+					"variant": "classic",
+					"x": 1,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i07",
+					"target": 3,
+					"variant": "classic",
+					"x": 3,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i08",
+					"target": 4,
+					"variant": "classic",
+					"x": 4,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i09",
+					"target": 5,
+					"variant": "classic",
+					"x": 5,
+					"y": 4
+				},
+				{
+					"color": "neutral",
+					"id": "i10",
+					"target": 2,
+					"variant": "classic",
+					"x": 2,
+					"y": 5
+				},
+				{
+					"color": "neutral",
+					"id": "i11",
+					"target": 4,
+					"variant": "classic",
+					"x": 5,
+					"y": 5
+				}
+			],
+			"title": "Etapa 3 · Nivel 4"
+		}
+	}
+]

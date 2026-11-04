@@ -24,5 +24,8 @@ timeout 30s godot --headless --path . --script tests/logical_profile.gd -- "$tes
 timeout 60s godot --headless --path . --script tests/free_play.gd
 timeout 60s godot --headless --path . --script tests/play_modes.gd
 timeout 60s godot --headless --path . --script tests/mode_stage_boundaries.gd
+timeout 90s godot --headless --path . --script tests/story.gd
+timeout 90s godot --headless --path . --script tests/story_stage_boundaries.gd
+timeout 90s godot --headless --path . --script tests/story_errors.gd
 python3 tests/signing_security.py
 

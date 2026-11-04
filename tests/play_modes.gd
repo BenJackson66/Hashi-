@@ -97,6 +97,7 @@ func test_transactions() -> void:
 	var legacy := session.snapshot_data()
 	legacy.version = 2
 	legacy.erase("run")
+	legacy.erase("story")
 	var id: String = legacy.procedural.keys()[0]
 	legacy.completed_ids.append(id)
 	write_json(path, legacy)
@@ -105,7 +106,7 @@ func test_transactions() -> void:
 	check(reopened.restore(), "actual v2 payload accepted")
 	check(reopened.run.mode == "free" and reopened.run.wins == 0 and reopened.run.credited_id == id, "no retrospective run wins")
 	check(FileAccess.get_file_as_string(path) == bytes, "v2 open leaves bytes untouched")
-	check(reopened.save_game() and JSON.parse_string(FileAccess.get_file_as_string(path)).version == 3, "next explicit save migrates atomically")
+	check(reopened.save_game() and JSON.parse_string(FileAccess.get_file_as_string(path)).version == Store.VERSION, "next explicit save migrates atomically")
 	var valid := reopened.snapshot_data()
 	for change in [{"wins": -1}, {"wins": 1.5}, {"wins": true}, {"mode": "unknown"}, {"credited_id": "foreign"}, {"board_profile": "normal"}]:
 		var invalid := valid.duplicate(true)
