@@ -1,6 +1,7 @@
 extends SceneTree
 const Main = preload("res://scenes/main.tscn")
 const Solver = preload("res://scripts/hashi_solver.gd")
+const VariantSolver = preload("res://scripts/hashi_variant_solver.gd")
 var checks := 0
 var failures := 0
 var ui: Control
@@ -30,7 +31,7 @@ func reopen() -> void:
 	ui.home.continue_button.pressed.emit()
 	verify(ui.session.snapshot_data() == before, "exact durable reopening")
 func solve_board() -> void:
-	var solution := Solver.new().solve(ui.board.puzzle)
+	var solution: Dictionary = Solver.new().solve(ui.board.puzzle) if ui.board.puzzle.ruleset == "classic-1" else VariantSolver.new().solve(ui.board.puzzle)
 	verify(solution.status == "unique", "unique actual story level")
 	if solution.status != "unique":
 		return

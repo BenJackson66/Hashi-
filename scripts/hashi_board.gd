@@ -1,7 +1,7 @@
 class_name HashiBoard
 extends Control
 const Puzzle = preload("res://scripts/hashi_puzzle.gd")
-const Rules = preload("res://scripts/hashi_rules.gd")
+const Rules = preload("res://scripts/hashi_rule_set.gd")
 const History = preload("res://scripts/hashi_history.gd")
 signal state_changed(message: String)
 signal puzzle_changed
@@ -87,18 +87,16 @@ func _draw() -> void:
 	for item in puzzle.islands:
 		var id := str(item.id)
 		var point: Vector2 = centers[id]
-		var degree := puzzle.degree(id)
-		var fill := Color("26384e")
-		if degree == int(item.target):
-			fill = Color("285d58")
-		if warnings_enabled and degree > int(item.target):
-			fill = Color("a33e51")
+		var fill := island_fill(item)
 		draw_circle(point, radius, fill)
 		draw_arc(point, radius, 0, TAU, 48, Color("f4cf79") if selected == id else Color("aac4d1"), 2.5, true)
-		var text := str(int(item.target))
+		var text := "?" if item.get("variant") == "mystery" else str(int(item.target))
 		var font_size := int(minf(25, radius * 1.05))
 		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		draw_string(font, point + Vector2(-width / 2, font_size * 0.35), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
+
+		if item.get("variant") == "blue":
+			draw_string(font, point + Vector2(radius * 0.55, -radius * 0.55), "S", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("9bd9ff"))
 
 func _hit(point: Vector2) -> String:
 	_layout_islands()
@@ -152,3 +150,16 @@ func _gui_input(event: InputEvent) -> void:
 		else:
 			_release(event.position)
 		accept_event()
+
+func island_fill(item: Dictionary) -> Color:
+	var fill := Color("26384e")
+	if item.get("variant") == "blue":
+		fill = Color("225a8d")
+	elif item.get("variant") == "mystery":
+		return Color("554478")
+	var degree := puzzle.degree(str(item.id))
+	if degree == int(item.target):
+		fill = Color("285d58")
+	if warnings_enabled and degree > int(item.target):
+		fill = Color("a33e51")
+	return fill

@@ -76,6 +76,7 @@ func build(catalog: Array) -> void:
 	_label("3. Entre dos islas puede haber cero, uno o dos puentes. Nunca pueden cruzarse ni atravesar otra isla.", pages.rules)
 	_label("4. Todas las islas deben quedar conectadas en una sola red. Completar los números en grupos separados no resuelve el tablero.", pages.rules)
 	_label("Toca dos islas o desliza de una a otra para alternar 0 → 1 → 2 → 0. Puedes Deshacer y Rehacer. Las advertencias son opcionales.", pages.rules)
+	_label("Historia · Azules (S): solo puentes simples, y el número cuenta todos los puentes. Misteriosas (?): no tienen número; deduce sus conexiones con las otras islas y une toda la red.", pages.rules)
 	rules_back_button = _button("Volver a Inicio", pages.rules, func(): show_page("home"))
 	_label("¿Sustituir el tablero procedural?", pages.confirm, 24)
 	_label("El procedural anterior tiene puentes y aún no está resuelto. Si el nuevo se genera y se guarda correctamente, sustituirá ese progreso. Los tres tableros de aprendizaje se conservan.", pages.confirm)
