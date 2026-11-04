@@ -71,6 +71,7 @@ var attempt_count: Label
 var attempt_chip: HBoxContainer
 var record_chip: HBoxContainer
 var _confirmation_page := "home"
+const INPUT_BACKLOG_LIMIT := 8
 
 func _ready() -> void:
 	set_process(false)
@@ -523,11 +524,13 @@ func _update_status(message: String) -> void:
 		status.text += " No se pudo guardar la partida."
 	var pending_quality: bool = not session.quality.pending.is_empty()
 	var ended := _iron_ended()
+	var was_input_enabled := board.input_enabled
+	var input_wait: bool = pending_quality and (solved or session.quality.pending.size() >= INPUT_BACKLOG_LIMIT or (quality_worker != null and quality_worker.uncertain))
 	board.bridge_color = Color("a16b29") if session.quality.streak >= 7 else (Color("77558a") if session.quality.streak >= 3 else (Color("2b7a9b") if session.quality.streak >= 1 else Color("466451")))
 	board.queue_redraw()
-	board.input_enabled = not pending_quality and not ended and not save_failed
-	undo_button.disabled = undo_button.disabled or pending_quality or ended or save_failed
-	redo_button.disabled = redo_button.disabled or pending_quality or ended or save_failed
+	board.input_enabled = not input_wait and not ended and not save_failed
+	undo_button.disabled = undo_button.disabled or input_wait or ended or save_failed
+	redo_button.disabled = redo_button.disabled or input_wait or ended or save_failed
 	restart_button.disabled = pending_quality or ended or save_failed
 	next_button.disabled = next_button.disabled or pending_quality or ended or save_failed
 	new_board_button.disabled = new_board_button.disabled or pending_quality or ended or save_failed
@@ -549,6 +552,8 @@ func _update_status(message: String) -> void:
 
 	var story_over := session.is_story() and session.story_corrections_left() == 0
 	board.input_enabled = board.input_enabled and not story_over and not help_view.visible
+	if was_input_enabled and not board.input_enabled:
+		board.cancel_gesture()
 	undo_button.disabled = undo_button.disabled or story_over
 	redo_button.disabled = redo_button.disabled or story_over
 	next_button.disabled = next_button.disabled or session.story_lost()
@@ -571,7 +576,20 @@ func _update_status(message: String) -> void:
 		button.text = ""
 	if session.story_lost():
 		status.text = "Intento terminado. Repite para volver a intentarlo."
-	notice.text = "Otra oportunidad" if session.story_lost() else ("Ronda terminada" if ended else ("¡Bien hecho!" if solved else ("No se pudo guardar" if save_failed else ("Un momento…" if generation_task != null or pending_quality else ("Inténtalo de nuevo" if not _generation_message.is_empty() else "")))))
+	if save_failed:
+		notice.text = "No se pudo guardar"
+	elif session.story_lost():
+		notice.text = "Otra oportunidad"
+	elif ended:
+		notice.text = "Ronda terminada"
+	elif pending_quality and quality_worker != null and quality_worker.uncertain:
+		notice.text = "Reintenta"
+	elif generation_task != null or (pending_quality and (input_wait or solved)):
+		notice.text = "Un momento…"
+	elif solved:
+		notice.text = "¡Bien hecho!"
+	else:
+		notice.text = "Inténtalo de nuevo" if not _generation_message.is_empty() else ""
 	notice.visible = not notice.text.is_empty()
 
 func _sync_selector() -> void:

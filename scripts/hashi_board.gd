@@ -33,7 +33,7 @@ var _touching_bridge: Dictionary = {}
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	resized.connect(queue_redraw)
+	resized.connect(cancel_gesture)
 	set_process(false)
 	cancel_gesture()
 

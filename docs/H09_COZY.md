@@ -34,8 +34,16 @@ Minerva implementó; Igor revisó independientemente sin editar producto. Prueba
 - `cozy_touch_review.gd`:20comprobaciones de eventos táctiles y ratón, cortes dobles/múltiples, campo denso, prioridad, cancelación, segundo dedo, jitter y lazo amplio.
 - `cozy_ui_review.gd`:52comprobaciones integradas en360×640 y480×800: cabecera, ayuda, Android Back simulado, corte real y guardado fallido/reintento/cancelación/derrota/reinicio.
 
-Total independiente145,0fallos. La suite heredada conserva sus aserciones funcionales; se adaptan fixtures antiguos para omitir el nuevo campo, texto de botones a sus nombres accesibles y geometría a las páginas donde ahora viven las acciones. Los iconos tienen mínimo48px (implementados52); las tarjetas64px. Android Back desde reglas vuelve a Modos.
+- `cozy_backlog_review.gd`:45comprobaciones portables de edición con comprobación pendiente, cola de8, incertidumbre, fallos de escritura, FIFO, victoria diferida y cancelación ante resultado asíncrono o resize.
+
+Total independiente190,0fallos. La suite heredada conserva sus aserciones funcionales; se adaptan fixtures antiguos para omitir el nuevo campo, texto de botones a sus nombres accesibles y geometría a las páginas donde ahora viven las acciones. Los iconos tienen mínimo48px (implementados52); las tarjetas64px. Android Back desde reglas vuelve a Modos.
 
 Recorrido real Xvfb/llvmpipe:28capturas de Inicio, Modos, mapa, juego, ayuda, corte, derrota, reinicio, victoria,1-2, continuar y otros modos a360×640 y480×800;0fallos de geometría. Tablero≥300px, nivel centrado y controles dentro de viewport. Igor inspeccionó visualmente7capturas concretas y emitió dictamen favorable; no se le atribuyen las otras21.
 
 Suite completa y CI se registran en PR/issue#19. No se afirma instalación/interacción física en Android: la revisión de tacto usa eventos reales de Godot y no un teléfono/emulador. Sin fusionar PRs ni publicar en tiendas.
+
+## Respuesta durante comprobaciones
+
+Un diagnóstico independiente forzado confirmó que el bloqueo previo de UI podía ignorar el siguiente toque mientras se comprobaba una posición. La edición, deshacer y rehacer ahora siguen disponibles con menos de8prefijos pendientes, salvo incertidumbre, error de escritura o intento terminado. El dominio ya conservaba el ordenFIFO; no se modifica Quality ni los solvers. Navegación, nuevo tablero y reinicio esperan a resolver los prefijos. Una victoria pendiente también espera antes de acreditar.
+
+Al pasar a bloqueo se cancela el gesto activo; un resize hace lo mismo. La espera no mueve el tablero mientras aún se puede editar. El probe34en una copia temporal instrumentada es diagnóstico adicional, no se suma a las190comprobaciones portables ni se incluye en el producto.
