@@ -31,3 +31,7 @@ La suite completa, la CI del SHA publicado y el APK se registran en el PR y en #
 ## Identidad Android
 
 Versión 0.6.0, versionCode 6, paquete `org.hashi.prototype`. Se conserva la identidad de firma persistente y se compara con el APK H02-C cuando el artefacto histórico está disponible. CI sin credenciales de firma para los pushes ordinarios; build agrupado solo tras revisión mediante el gate `[apk]`.
+
+## Candidata agrupada
+
+Fuente revisada `7e7fb9437f9c0fb0553099dd1d58d8f8938ab316`: suite local completa finalizada con 0 fallos, firma estática 15/15 y CI [41790786982](https://github.com/BenJackson66/Hashi-/actions/runs/41790786982) correcta. Oráculos y revisión de conservación continúan verdes. Este cambio solo documental autoriza una compilación agrupada `[apk]`; no altera juego ni workflows. PR #16, apilado sin fusionar.
