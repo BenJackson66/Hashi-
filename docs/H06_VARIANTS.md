@@ -30,7 +30,7 @@ Los fallos de escritura conservan selección, recetas, run y frontera anteriores
 
 ## Evidencia ejecutada
 
-Godot 4.6.3 oficial verificado. `tests/run.sh`: **73.892 comprobaciones, 0 fallos**, sumando la suite completa de 73.821 y la revisión independiente de migración 71 incorporada y ejecutada de forma focal. También pasan las reaperturas clásica/procedural en procesos separados. CI debe confirmar el SHA publicado.
+Godot 4.6.3 oficial verificado. `tests/run.sh`: **73.892 comprobaciones, 0 fallos**, confirmadas por CI de la fuente `1370510ca6157d60969d4801968a9f2dfb7b0609`: [run41758421615](https://github.com/BenJackson66/Hashi-/actions/runs/41758421615), success. También pasan las reaperturas clásica/procedural en procesos separados. Minerva revisó fuente, oráculo, migración y capturas, y autorizó una compilación agrupada; este commit documental activa ese build sin modificar juego ni workflows.
 
 - `tests/variant_oracle.gd`: autoría/revisión independiente de Minerva,621 comprobaciones sobre 291 casos públicos. Enumeración autónoma de grafos 4/6 con cruce y caminos externos:258 sin solución, 31 únicos, 2 múltiples. Contrasta los conjuntos testigo sin usar reglas ni aristas productivas.
 - `tests/variants.gd`:387 comprobaciones de generación determinista en 15 combinaciones semilla/tipo, unicidad visible, rechazo de target secreto, límites, ciclo azul, feedback de advertencias, leyendas,25 niveles de UI y reaperturas.
@@ -41,4 +41,4 @@ Render real Xvfb/llvmpipe a 360×640 y 480×800: `tools/variants_walkthrough.gd`
 
 ## Distribución
 
-Identidad `org.hashi.prototype`, candidata 0.5.0/versionCode 5. Workflow nuevo `variants-tests.yml` sin secretos y `variants-apk.yml` separado, permisos mínimos, gate[apk]. No se ha emitido APK antes del dictamen de Minerva. Comparación criptográfica con H02-C si el artefacto se conserva; declara UNAVAILABLE si no es descargable. Sin cambio de firma, secretos, publicación en tiendas ni merges.
+Identidad `org.hashi.prototype`, candidata 0.5.0/versionCode 5. Workflow nuevo `variants-tests.yml` sin secretos y `variants-apk.yml` separado, permisos mínimos, gate[apk]. La compilación agrupada se activa únicamente después del dictamen favorable de Minerva sobre la fuente y CI indicados arriba. Comparación criptográfica con H02-C si el artefacto se conserva; declara UNAVAILABLE si no es descargable. Sin cambio de firma, secretos, publicación en tiendas ni merges.
