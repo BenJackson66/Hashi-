@@ -5,7 +5,9 @@ const Rules = preload("res://scripts/hashi_rules.gd")
 const Generator = preload("res://scripts/hashi_generator.gd")
 const Solver = preload("res://scripts/hashi_solver.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
-const VERSION := 3
+const Story = preload("res://scripts/hashi_story_state.gd")
+const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
+const VERSION := 4
 const MAX_BYTES := 131072
 var path: String
 var last_error := ""
@@ -16,7 +18,7 @@ func _init(save_path: String = "user://hashi-save-v1.json") -> void:
 func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	if not data is Dictionary or not data.has_all(["version", "current_puzzle_id", "boards", "completed_ids"]):
 		return false
-	if not _integer(data.version) or int(data.version) not in [1, 2, VERSION]:
+	if not _integer(data.version) or int(data.version) not in [1, 2, 3, VERSION]:
 		return false
 	if not data.current_puzzle_id is String or not data.boards is Dictionary or not data.completed_ids is Array:
 		return false
@@ -25,14 +27,19 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 		allowed.append("procedural")
 		if not data.get("procedural") is Dictionary or data.procedural.size() > 1:
 			return false
-	if data.version == VERSION:
+	if data.version >= 3:
 		allowed.append("run")
 		if not Mode.valid(data.get("run"), data.procedural):
+			return false
+	if data.version >= 4:
+		allowed.append("story")
+		if not Story.valid(data.get("story")):
 			return false
 	for field in data:
 		if field not in allowed:
 			return false
 	var known := {}
+	var story_definitions: Array = []
 	for definition in catalog:
 		known[str(definition.id)] = definition
 	if data.version >= 2:
@@ -43,6 +50,20 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 			if recipe.is_empty():
 				return false
 			known[id] = recipe.puzzle
+	if data.version >= 4:
+		story_definitions = StoryCatalog.definitions()
+		for definition in story_definitions:
+			if known.has(definition.id):
+				return false
+			known[definition.id] = definition
+		for ordinal in data.story.recipes:
+			var recipe: Dictionary = data.story.recipes[ordinal]
+			var id: String = str(recipe.puzzle.get("id", ""))
+			if known.has(id) or normalize_recipe(id, recipe).is_empty():
+				return false
+			known[id] = recipe.puzzle
+		if Story.ordinal(data.story, data.current_puzzle_id) >= 0 and not Story.unlocked(data.story, data.current_puzzle_id):
+			return false
 	if not known.has(data.current_puzzle_id) or not data.boards.has(data.current_puzzle_id):
 		return false
 	if data.boards.size() > known.size() or data.completed_ids.size() > known.size():
@@ -54,7 +75,13 @@ func valid_snapshot(data: Variant, catalog: Array) -> bool:
 	for id in data.completed_ids:
 		if not id is String or not known.has(id) or completed.has(id):
 			return false
+		if data.version >= 4 and Story.ordinal(data.story, id) >= int(data.story.frontier):
+			return false
 		completed[id] = true
+	if data.version >= 4:
+		for i in mini(StoryCatalog.COUNT, int(data.story.frontier)):
+			if story_definitions[i].id not in completed:
+				return false
 	return true
 
 func normalize_recipe(id: String, value: Variant) -> Dictionary:
@@ -147,13 +174,19 @@ func load_game(catalog: Array) -> Dictionary:
 	var restored: Dictionary = parser.data.duplicate(true)
 	# JSON numbers are floats in Godot; normalize validated counts for the model.
 	restored.version = VERSION
+	restored.story = parser.data.get("story", Story.fresh()).duplicate(true)
+	restored.story.frontier = int(restored.story.frontier)
+	restored.story.version = 1
+	for ordinal in restored.story.recipes:
+		var recipe: Dictionary = restored.story.recipes[ordinal]
+		restored.story.recipes[ordinal] = normalize_recipe(str(recipe.puzzle.id), recipe)
 	restored.run = parser.data.get("run", Mode.fresh()).duplicate(true)
 	restored.run.wins = int(restored.run.wins)
 	restored.run.version = Mode.VERSION
 	restored.procedural = {}
 	for id in parser.data.get("procedural", {}):
 		restored.procedural[id] = normalize_recipe(id, parser.data.procedural[id])
-	if parser.data.version < VERSION and not restored.procedural.is_empty():
+	if parser.data.version < 3 and not restored.procedural.is_empty():
 		var previous_id: String = restored.procedural.keys()[0]
 		# Historical completions are not wins in a newly introduced run.
 		if previous_id in restored.completed_ids:

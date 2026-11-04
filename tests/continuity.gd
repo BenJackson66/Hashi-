@@ -82,7 +82,7 @@ func test_sequence_and_session() -> void:
 	check(Sequence.new().next_id("unknown").is_empty(), "empty catalog policy")
 	var session := Session.new(catalog, "user://h02a-session.json")
 	check(not session.advance(), "incomplete board cannot advance")
-	check(not session.select(-1) and not session.select(3), "invalid selection refused")
+	check(not session.select(-1) and not session.select(session.catalog.size()), "invalid selection refused")
 	for i in range(3):
 		var puzzle := session.current_puzzle()
 		puzzle.bridges = SOLUTIONS[i].duplicate()

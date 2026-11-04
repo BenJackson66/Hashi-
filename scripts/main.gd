@@ -4,9 +4,15 @@ const Rules = preload("res://scripts/hashi_rules.gd")
 const Board = preload("res://scripts/hashi_board.gd")
 const Session = preload("res://scripts/hashi_session.gd")
 const Mode = preload("res://scripts/hashi_play_mode.gd")
+const Story = preload("res://scripts/hashi_story_state.gd")
+const StoryCatalog = preload("res://scripts/hashi_story_catalog.gd")
+const StoryPolicy = preload("res://scripts/hashi_story_policy.gd")
+const StoryView = preload("res://scripts/hashi_story_view.gd")
 const Settings = preload("res://scripts/hashi_free_settings.gd")
 const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
+var story_view: StoryView
+var _request_story := -1
 var settings: Settings
 var home: Home
 var game_view: MarginContainer
@@ -70,6 +76,8 @@ func _ready() -> void:
 	heading.add_theme_font_size_override("font_size", 24)
 	header.add_child(heading)
 	selector = OptionButton.new()
+	selector.fit_to_longest_item = false
+	selector.clip_text = true
 	selector.custom_minimum_size.y = 48
 	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for i in puzzles.size():
@@ -119,6 +127,12 @@ func _ready() -> void:
 	add_child(home)
 	home.build(puzzles)
 	home.challenge.select(0 if settings.profile == "local" else 1)
+	story_view = StoryView.new()
+	add_child(story_view)
+	story_view.hide()
+	story_view.selected.connect(_select_story)
+	story_view.back_requested.connect(_show_home)
+	home.story_requested.connect(_show_story)
 	home.profile_requested.connect(_choose_profile)
 	home.continue_requested.connect(_continue_game)
 	home.new_requested.connect(func(): _ask_mode("free", settings.profile))
@@ -170,7 +184,9 @@ func _select_puzzle(index: int) -> void:
 func _next_puzzle() -> void:
 	if not Rules.is_solved(board.puzzle):
 		return
-	if session.is_procedural():
+	if session.is_story():
+		_select_story(_next_story_ordinal())
+	elif session.is_procedural():
 		_ask_new_puzzle()
 	else:
 		_select_puzzle(session.sequence.ids.find(session.sequence.next_id(board.puzzle.puzzle_id)))
@@ -186,6 +202,8 @@ func _show_home() -> void:
 	_confirmation_pending = false
 	_invalidate_generation()
 	screen = "home"
+	if story_view != null:
+		story_view.hide()
 	game_view.hide()
 	home.show()
 	home.show_page("home")
@@ -206,6 +224,7 @@ func _open_game() -> void:
 	_confirmation_pending = false
 	_invalidate_generation()
 	screen = "game"
+	story_view.hide()
 	home.hide()
 	game_view.show()
 	_clear_gesture()
@@ -273,7 +292,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST and home != null:
 		if _confirmation_pending:
 			_cancel_new_puzzle()
-		elif screen == "game":
+		elif screen in ["game", "story"]:
 			_show_home()
 		elif home.page != "home":
 			home.show_page("home")
@@ -295,11 +314,16 @@ func _update_status(message: String) -> void:
 	next_button.disabled = not solved or generation_task != null or save_failed
 	next_button.text = "Siguiente tablero" if session.is_procedural() else ("Volver al primero" if session.sequence.wraps_after(board.puzzle.puzzle_id) else "Siguiente")
 	new_board_button.disabled = generation_task != null or save_failed
-	mode_status.visible = session.is_procedural()
-	mode_status.text = Mode.description(session.run)
+	new_board_button.visible = not session.is_story()
+	mode_status.visible = session.is_procedural() or session.is_story()
+	mode_status.text = ("Historia · " + StoryCatalog.title(session.story_ordinal()) + " · " + ("Directo" if StoryPolicy.profile(session.story_ordinal()) == "local" else "Reflexivo")) if session.is_story() else Mode.description(session.run)
+	if session.is_story():
+		next_button.text = "Continuar ruta" if _next_story_ordinal() > session.story_ordinal() + 1 else "Siguiente nivel"
 	_sync_selector()
 	if solved:
-		if session.is_procedural():
+		if session.is_story():
+			status.text = "¡Nivel resuelto! Puedes seguir o repetirlo."
+		elif session.is_procedural():
 			status.text = "¡Tablero resuelto! Puedes crear otro."
 		else:
 			status.text = "Tablero resuelto. Fin de la secuencia provisional." if session.sequence.wraps_after(board.puzzle.puzzle_id) else "¡Tablero resuelto! Puedes pasar al siguiente."
@@ -319,6 +343,8 @@ func _update_status(message: String) -> void:
 		status.text = _generation_message
 	if save_failed:
 		status.text += " No se pudo guardar la partida."
+	if story_view != null and screen == "story":
+		story_view.update_state(generation_task != null, status.text if generation_task != null or not _generation_message.is_empty() or save_failed else "")
 	if home != null:
 		home.update_state(_has_game, generation_task != null, status.text if generation_task != null or not _generation_message.is_empty() or save_failed else "")
 
@@ -330,8 +356,12 @@ func _sync_selector() -> void:
 	for i in session.catalog.size():
 		var definition: Dictionary = session.catalog[i]
 		var title := "%d · %s" % [i + 1, definition.title] if i < session.base_catalog.size() else str(definition.title)
-		if i >= session.base_catalog.size() and session.run.mode != "free":
+		if session.procedural.has(str(definition.id)) and session.run.mode != "free":
 			title = ("Fija" if session.run.mode == "fixed" else "Progresión") + " · " + ("Directo" if session.run.board_profile == "local" else "Reflexivo")
+		var ordinal := Story.ordinal(session.story, str(definition.id))
+		if ordinal >= 0:
+			title = "Historia · " + StoryCatalog.title(ordinal)
+		selector.set_item_disabled(i, ordinal > int(session.story.frontier))
 		selector.set_item_text(i, title + (" ✓" if str(definition.id) in session.completed_ids else ""))
 	selector.select(session.current_index)
 
@@ -354,6 +384,7 @@ func _request_new_puzzle() -> bool:
 	_generation_message = ""
 	generation_task = GenerationTask.new()
 	var excluded_id := str(session.procedural.keys()[0]) if not session.procedural.is_empty() else ""
+	_request_story = -1
 	_request_run = _pending_run.duplicate(true) if not _pending_run.is_empty() else session.run.duplicate(true)
 	_pending_run = {}
 	_request_run.board_profile = Mode.next_profile(_request_run, settings.profile)
@@ -384,6 +415,15 @@ func _process(_delta: float) -> void:
 	if result.status != "success":
 		_generation_message = "No se pudo generar un tablero. Inténtalo de nuevo."
 		_update_status("")
+	elif _request_story >= 0:
+		if session.install_story_and_save(_request_story, result.recipe):
+			save_failed = false
+			_has_game = true
+			_display_current()
+			_open_game()
+		else:
+			_generation_message = "No se pudo guardar el nivel. Se conserva tu partida."
+			_update_status("")
 	elif session.install_procedural_and_save(result.recipe, _request_run):
 		save_failed = false
 		_has_game = true
@@ -400,3 +440,40 @@ func _exit_tree() -> void:
 		generation_task.finish_on_shutdown()
 		generation_task = null
 
+
+func _show_story() -> void:
+	_invalidate_generation()
+	screen = "story"
+	home.hide()
+	game_view.hide()
+	story_view.refresh(session.story, session.completed_ids)
+	story_view.show()
+	_update_status("")
+
+func _select_story(ordinal: int) -> void:
+	if generation_task != null or ordinal < 0 or ordinal > int(session.story.frontier):
+		return
+	if save_failed:
+		_save_game()
+		if save_failed:
+			return
+	var index := session.story_index(ordinal)
+	if index >= 0:
+		_select_puzzle(index)
+		return
+	if ordinal != int(session.story.frontier) or ordinal < StoryCatalog.COUNT:
+		return
+	_generation_epoch += 1
+	_request_epoch = _generation_epoch
+	_request_story = ordinal
+	generation_task = GenerationTask.new()
+	if not generation_task.start_story(ordinal, generation_options, Story.definitions(session.story)):
+		generation_task = null
+		_generation_message = "No se pudo iniciar el nivel. Inténtalo de nuevo."
+	else:
+		set_process(true)
+	_update_status("")
+
+func _next_story_ordinal() -> int:
+	var following := session.story_ordinal() + 1
+	return following if session.story_index(following) >= 0 else int(session.story.frontier)

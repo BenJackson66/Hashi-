@@ -1,5 +1,6 @@
 extends MarginContainer
 ## Presentation only: navigation and save/generation policies belong to main.
+signal story_requested
 signal continue_requested
 signal new_requested
 signal lesson_requested(index: int)
@@ -8,6 +9,7 @@ signal cancel_requested
 signal profile_requested(profile: String)
 signal mode_requested(mode: String, profile: String)
 signal page_changed
+var story_button: Button
 var fixed_button: Button
 var progression_button: Button
 var challenge: OptionButton
@@ -45,6 +47,7 @@ func build(catalog: Array) -> void:
 		content.add_child(column)
 		pages[name] = column
 	continue_button = _button("Continuar partida", pages.home, func(): continue_requested.emit())
+	story_button = _button("Historia", pages.home, func(): story_requested.emit())
 	_label("Partida libre", pages.home, 22)
 	challenge = OptionButton.new()
 	challenge.custom_minimum_size.y = 56

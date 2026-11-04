@@ -1,3 +1,9 @@
+## Estado actual — 0.4.0
+
+Historia ofrece 12 niveles iniciales en tres etapas, desbloqueo y continuación clásica indefinida por etapas. Conserva los 12 iniciales y los cuatro niveles más recientes de la ruta continua. Su progreso es independiente de las series fija/progresión. Las variantes azules y misteriosas siguen pendientes.
+
+El guardado actual es v4 y lee v1/v2/v3. Abrir una partida antigua no reescribe el archivo; la migración ocurre al siguiente guardado válido. Véase [H05-A](docs/H05A_STORY.md). Las secciones siguientes documentan entregas anteriores.
+
 # Hashi — partida libre y desafíos provisionales
 
 Prototipo jugable en **Godot 4.x** (probado con 4.6.3), GDScript y renderizador Compatibility. Orientado a pantallas verticales Android; incluye presets Android y Web. Sin dependencias externas ni credenciales para jugar.
