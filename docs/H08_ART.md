@@ -25,3 +25,7 @@ La suite completa y CI del SHA publicado se registran en el PR. Se conservan tod
 ## Entrega Android
 
 0.7.0/versionCode7, ARM64, paquete `org.hashi.prototype` y certificado histórico. Workflow de tests sin secretos y build agrupado tras revisión mediante `[apk]`. La instalación e interacción Android física no se afirman: el entorno carece de teléfono/emulador. PR sin fusionar y sin tiendas. Contrato #17.
+
+## Candidata agrupada
+
+Fuente `09ae8b7689514a0a548ba2b6d88ba1f11f156764`, suite local completa y [CI41794193165](https://github.com/BenJackson66/Hashi-/actions/runs/41794193165) correctas. Este cambio solo documental habilita la compilación agrupada `[apk]`, sin modificar juego ni workflows. PR#18, abierto sin fusionar.
