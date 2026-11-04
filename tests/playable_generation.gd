@@ -198,7 +198,7 @@ func test_ui() -> void:
 	ui.save_path = "user://h02c-ui.json"
 	root.add_child(ui)
 	await process_frame
-	check(ui.new_board_button.text == "Nuevo tablero" and not ui.new_board_button.disabled, "new board button available")
+	check(ui.new_board_button.tooltip_text == "Nuevo tablero" and not ui.new_board_button.disabled, "new board button available")
 	var previous_seed: int = ui._last_requested_seed
 	check(ui._request_new_puzzle(), "UI starts asynchronous generation")
 	check(ui._last_requested_seed != previous_seed, "new seed chosen")
@@ -265,7 +265,7 @@ func test_ui() -> void:
 		for count in int(solved.solutions[0][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
 			await settle_quality(ui)
-	check(not ui.next_button.disabled and ui.next_button.text == "Siguiente tablero" and "resuelto" in ui.status.text, "procedural victory and return control")
+	check(not ui.next_button.disabled and ui.next_button.tooltip_text == "Siguiente tablero" and "resuelto" in ui.status.text, "procedural victory and return control")
 	check(id in ui.session.completed_ids and not contains_solution(ui.session.snapshot_data()), "procedural completion saved without hidden solution fields")
 	ui.next_button.pressed.emit()
 	check(ui.generation_task != null, "victory requests next procedural directly")

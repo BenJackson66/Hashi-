@@ -222,7 +222,7 @@ func test_ui() -> void:
 		for count in int(SOLUTIONS[2][edge]):
 			ui.board._connect_islands(ids[0], ids[1])
 			await settle_quality(ui)
-	check(not ui.next_button.disabled and ui.next_button.text == "Volver al primero", "last board wraps explicitly")
+	check(not ui.next_button.disabled and ui.next_button.tooltip_text == "Volver al primero", "last board wraps explicitly")
 	check("provisional" in ui.status.text, "temporary sequence wording")
 	ui.next_button.pressed.emit()
 	await settle_quality(ui)

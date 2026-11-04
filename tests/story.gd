@@ -100,6 +100,7 @@ func transactions():
 		legacy.version = version
 		legacy.erase("story")
 		legacy.erase("quality")
+		legacy.erase("story_attempts")
 		if version < 3:
 			legacy.erase("run")
 		if version < 2:

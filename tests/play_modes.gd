@@ -106,6 +106,7 @@ func test_transactions() -> void:
 	legacy.erase("run")
 	legacy.erase("story")
 	legacy.erase("quality")
+	legacy.erase("story_attempts")
 	var id: String = legacy.procedural.keys()[0]
 	legacy.completed_ids.append(id)
 	write_json(path, legacy)

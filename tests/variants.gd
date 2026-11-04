@@ -138,6 +138,7 @@ func integration():
 	var old: Dictionary = ui.session.snapshot_data()
 	old.version = 4
 	old.erase("quality")
+	old.erase("story_attempts")
 	old.story = {"version": 1, "policy": Policy.VERSION, "frontier": 0, "recipes": {}}
 	old.procedural = {}
 	old.boards = {str(tutorials[0].id): {}}
