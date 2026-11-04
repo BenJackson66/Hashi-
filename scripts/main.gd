@@ -13,6 +13,10 @@ const QualityWorker = preload("res://scripts/hashi_quality_worker.gd")
 const Settings = preload("res://scripts/hashi_free_settings.gd")
 const Home = preload("res://scripts/hashi_home.gd")
 const GenerationTask = preload("res://scripts/hashi_generation_task.gd")
+const Art = preload("res://scripts/hashi_art.gd")
+const Backdrop = preload("res://scripts/hashi_backdrop.gd")
+const ArtPreferences = preload("res://scripts/hashi_art_preferences.gd")
+var art_preferences: ArtPreferences
 var story_view: StoryView
 var _request_story := -1
 var quality_worker: QualityWorker
@@ -56,6 +60,9 @@ var save_failed := false
 
 func _ready() -> void:
 	set_process(false)
+	theme = Art.theme()
+	add_child(Backdrop.new())
+	art_preferences = ArtPreferences.new(save_path + ".appearance")
 	get_tree().quit_on_go_back = false
 	_seed_rng.randomize()
 	puzzles = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
@@ -81,7 +88,7 @@ func _ready() -> void:
 	home_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	var heading := Label.new()
 	heading.text = "HASHI"
-	heading.add_theme_font_size_override("font_size", 24)
+	Art.heading(heading, 19)
 	header.add_child(heading)
 	selector = OptionButton.new()
 	selector.fit_to_longest_item = false
@@ -97,10 +104,12 @@ func _ready() -> void:
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(hint)
+	hint.add_theme_color_override("font_color", Art.MUTED)
 	mode_status = Label.new()
 	mode_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mode_status.add_theme_font_size_override("font_size", 14)
 	column.add_child(mode_status)
+	mode_status.add_theme_color_override("font_color", Art.GOLD)
 	quality_status = Label.new()
 	quality_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quality_status.add_theme_font_size_override("font_size", 14)
@@ -109,6 +118,7 @@ func _ready() -> void:
 	quality_retry.custom_minimum_size.y = 36
 	quality_retry.hide()
 	board = Board.new()
+	board.set_motion_enabled(art_preferences.motion)
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(200, 200)
 	column.add_child(board)
@@ -136,12 +146,20 @@ func _ready() -> void:
 	column.add_child(navigation)
 	restart_button = _button("Reiniciar", navigation, board.reset)
 	next_button = _button("Siguiente", navigation, _next_puzzle)
+	Art.primary(next_button)
 	board.puzzle_changed.connect(_on_puzzle_changed)
 	board.state_changed.connect(_update_status)
 	selector.item_selected.connect(_select_puzzle)
 	home = Home.new()
 	add_child(home)
 	home.build(puzzles)
+	home.motion_button.set_pressed_no_signal(art_preferences.motion)
+	home.motion_requested.connect(func(enabled: bool):
+		if art_preferences.save_motion(enabled):
+			board.set_motion_enabled(enabled)
+		else:
+			home.motion_button.set_pressed_no_signal(art_preferences.motion)
+	)
 	home.challenge.select(0 if settings.profile == "local" else 1)
 	story_view = StoryView.new()
 	add_child(story_view)
@@ -171,7 +189,12 @@ func _button(text: String, parent: Control, callback: Callable) -> Button:
 	button.text = text
 	button.custom_minimum_size.y = 48
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_font_size_override("font_size", 14)
+	for style in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var box: StyleBoxFlat = theme.get_stylebox(style, "Button").duplicate()
+		box.content_margin_left = 8
+		box.content_margin_right = 8
+		button.add_theme_stylebox_override(style, box)
 	button.pressed.connect(callback)
 	parent.add_child(button)
 	return button

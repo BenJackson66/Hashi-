@@ -33,5 +33,6 @@ timeout 90s godot --headless --path . --script tests/variant_migration_review.gd
 timeout 90s godot --headless --path . --script tests/monotone_oracle.gd
 timeout 90s godot --headless --path . --script tests/quality_review.gd
 timeout 90s godot --headless --path . --script tests/iron_streaks.gd
+timeout 60s godot --headless --path . --script tests/art_presentation.gd
 python3 tests/signing_security.py
 

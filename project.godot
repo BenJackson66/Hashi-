@@ -3,6 +3,7 @@ config_version=5
 
 [application]
 config/name="Hashi"
+config/icon="res://assets/art/mark.svg"
 run/main_scene="res://scenes/main.tscn"
 
 [display]
@@ -17,7 +18,7 @@ window/handheld/orientation=1
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
-environment/defaults/default_clear_color=Color(0.055, 0.075, 0.11, 1)
+environment/defaults/default_clear_color=Color(0.055, 0.125, 0.153, 1)
 
 [input_devices]
 pointing/emulate_touch_from_mouse=false
