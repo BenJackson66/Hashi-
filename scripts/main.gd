@@ -72,12 +72,23 @@ var attempt_chip: HBoxContainer
 var record_chip: HBoxContainer
 var _confirmation_page := "home"
 const INPUT_BACKLOG_LIMIT := 8
+const LandscapeProgress=preload("res://scripts/hashi_landscape_progress.gd")
+const RestorationView=preload("res://scripts/hashi_restoration_view.gd")
+const Sound=preload("res://scripts/hashi_sound.gd")
+var restoration_view: RestorationView
+var sound: Sound
+var sound_toggle: CheckButton
+var _victory_audio_id := ""
+var _pending_restoration := -1
+var _restoration_epoch := 0
+
 
 func _ready() -> void:
 	set_process(false)
 	theme = Art.theme()
 	add_child(Backdrop.new())
 	art_preferences = ArtPreferences.new(save_path + ".appearance")
+	sound=Sound.new();add_child(sound);sound.set_enabled(art_preferences.sound)
 	get_tree().quit_on_go_back = false
 	_seed_rng.randomize()
 	puzzles = JSON.parse_string(FileAccess.get_file_as_string("res://data/puzzles.json"))
@@ -168,12 +179,16 @@ func _ready() -> void:
 	home.motion_requested.connect(func(enabled: bool):
 		if art_preferences.save_motion(enabled):
 			board.set_motion_enabled(enabled)
+			if story_view.landscape!=null:story_view.landscape.set_motion_enabled(enabled)
+			story_view.motion_enabled=enabled
+			if restoration_view!=null:restoration_view.landscape.set_motion_enabled(enabled)
 		else:
 			home.motion_button.set_pressed_no_signal(art_preferences.motion)
 	)
 	story_view = StoryView.new()
 	add_child(story_view)
 	story_view.hide()
+	story_view.motion_enabled=art_preferences.motion
 	story_view.selected.connect(_select_story)
 	story_view.back_requested.connect(_show_home)
 	story_view.help_requested.connect(func(): _show_help(true))
@@ -187,6 +202,14 @@ func _ready() -> void:
 	home.cancel_requested.connect(_cancel_new_puzzle)
 	home.page_changed.connect(_on_home_page_changed)
 	_build_help()
+	restoration_view=RestorationView.new();add_child(restoration_view);restoration_view.hide()
+	restoration_view.continue_requested.connect(_continue_restoration)
+	restoration_view.map_requested.connect(_show_story)
+	restoration_view.sound_requested.connect(func():_change_sound(not art_preferences.sound))
+	restoration_view.set_sound_enabled(art_preferences.sound)
+	restoration_view.revealed.connect(func():
+		if restoration_view.visible and restoration_view.landscape.target%3==0:sound.play("restore")
+	)
 	quality_worker = QualityWorker.new()
 	quality_worker.host = self
 	add_child(quality_worker)
@@ -253,6 +276,10 @@ func _build_help() -> void:
 	)
 	body.add_child(warnings_toggle)
 	home.motion_button.reparent(body)
+	sound_toggle=CheckButton.new();sound_toggle.text="Sonidos";sound_toggle.custom_minimum_size.y=52
+	sound_toggle.set_pressed_no_signal(art_preferences.sound)
+	sound_toggle.toggled.connect(_change_sound)
+	body.add_child(sound_toggle)
 	_button("Aprender", body, func():
 		_close_help()
 		_show_home()
@@ -267,7 +294,7 @@ func _show_help(force_story: bool = false) -> void:
 	if not in_story and not session.is_procedural():
 		name_mode = "Aprender"
 	help_title.text = name_mode
-	var description: String = "Resuelve un nivel para abrir el siguiente. El corazón cuenta tus tres correcciones por intento. Deshacer o borrar puentes consume una; cortar varios con un solo gesto cuenta una vez. Cuando se agotan, termina el intento si aún no has resuelto la red. Repite para volver a intentarlo: conservas los niveles superados." if in_story else {"free":"Un tablero a tu ritmo. Elige Directo o Reflexivo en Modos.", "fixed":"Una serie con el mismo perfil de desafío.", "progression":"Una serie que va de Directo a Reflexivo.", "iron":"La primera falta termina el desafío. Conservas tu récord al empezar otro."}[session.run.mode]
+	var description: String = "Cada nivel superado devuelve vida al paisaje del faro. No necesitas monedas. Resuelve un nivel para abrir el siguiente. El corazón cuenta tus tres correcciones por intento. Deshacer o borrar puentes consume una; cortar varios con un solo gesto cuenta una vez. Cuando se agotan, termina el intento si aún no has resuelto la red. Repite para volver a intentarlo: conservas los niveles superados." if in_story else {"free":"Un tablero a tu ritmo. Elige Directo o Reflexivo en Modos.", "fixed":"Una serie con el mismo perfil de desafío.", "progression":"Una serie que va de Directo a Reflexivo.", "iron":"La primera falta termina el desafío. Conservas tu récord al empezar otro."}[session.run.mode]
 	if name_mode == "Aprender":
 		description = "Unos tableros para familiarizarte con los puentes."
 	help_text.text = description + "\n\nCÓMO JUGAR\nConecta todas las islas en una red. Cada número cuenta los puentes que necesita. Entre dos islas caben hasta dos puentes. No pueden cruzarse ni pasar sobre otra isla.\n\nToca dos islas o desliza entre ellas: 0 → 1 → 2 → 0. Las S alternan 0 → 1 → 0. Para borrar, cruza el puente con un trazo. Puedes cortar varios a la vez.\n\nS: solo puentes simples. ?: sin número.\n\nRACHA\nEl símbolo de la llama cuenta tableros perfectos. Deshacer, retirar puentes o dejar la red sin solución corta la racha. Azul:1; morado:3; dorado:7.\n\nLas flechas curvas deshacen y rehacen; la circular repite y el triángulo continúa."
@@ -312,6 +339,7 @@ func _button(text: String, parent: Control, callback: Callable) -> Button:
 func _display_current() -> void:
 	_invalidate_generation()
 	board.set_puzzle(session.current_puzzle())
+	_victory_audio_id=board.puzzle.puzzle_id if Rules.is_solved(board.puzzle) else ""
 	_sync_selector()
 	selector.select(session.current_index)
 	_update_status("")
@@ -355,6 +383,7 @@ func _choose_profile(profile: String) -> void:
 	_update_status("")
 
 func _show_home() -> void:
+	_dismiss_restoration()
 	if help_view != null:
 		help_view.hide()
 	_confirmation_pending = false
@@ -377,6 +406,7 @@ func _clear_gesture() -> void:
 	board.cancel_gesture()
 
 func _open_game() -> void:
+	_dismiss_restoration()
 	if help_view != null:
 		help_view.hide()
 	_confirmation_pending = false
@@ -448,10 +478,24 @@ func _on_puzzle_changed() -> void:
 	_save_game()
 
 func _save_game() -> void:
+	var before_frontier:=LandscapeProgress.progress(session.story)
+	var previous:=session.current_puzzle()
+	var ended_before:=session.story_lost() or _iron_ended()
 	save_failed = not session.capture_and_save(board.puzzle, _quality_actions, _quality_verdict)
 	if not save_failed:
+		_play_committed_sound(previous,board.puzzle)
 		_quality_actions.clear()
 		_quality_verdict.clear()
+		var ended_now:=session.story_lost() or _iron_ended()
+		if ended_now and not ended_before:sound.play("end")
+		if not Rules.is_solved(board.puzzle):_victory_audio_id=""
+		elif session.quality.pending.is_empty() and not ended_now and _victory_audio_id!=board.puzzle.puzzle_id:
+			_victory_audio_id=board.puzzle.puzzle_id;sound.play("win")
+		var after_frontier:=LandscapeProgress.progress(session.story)
+		if after_frontier>before_frontier and session.is_story() and not ended_now:
+			_pending_restoration=before_frontier
+			var epoch:=_restoration_epoch
+			_present_restoration.call_deferred(before_frontier,after_frontier,epoch)
 	_has_game = true
 	_update_status("")
 
@@ -461,6 +505,8 @@ func _notification(what: int) -> void:
 			_close_help()
 		elif _confirmation_pending:
 			_cancel_new_puzzle()
+		elif screen == "restoration":
+			_show_story()
 		elif screen in ["game", "story"]:
 			_show_home()
 		elif home.page != "home":
@@ -551,7 +597,7 @@ func _update_status(message: String) -> void:
 		home.update_state(_has_game, generation_task != null or pending_quality, status.text if generation_task != null or pending_quality or not _generation_message.is_empty() or save_failed else "", pending_quality)
 
 	var story_over := session.is_story() and session.story_corrections_left() == 0
-	board.input_enabled = board.input_enabled and not story_over and not help_view.visible
+	board.input_enabled = board.input_enabled and not story_over and not help_view.visible and screen!="restoration"
 	if was_input_enabled and not board.input_enabled:
 		board.cancel_gesture()
 	undo_button.disabled = undo_button.disabled or story_over
@@ -591,6 +637,7 @@ func _update_status(message: String) -> void:
 	else:
 		notice.text = "Inténtalo de nuevo" if not _generation_message.is_empty() else ""
 	notice.visible = not notice.text.is_empty()
+	if sound!=null:sound.set_context(LandscapeProgress.progress(session.story),screen in ["story","restoration"] or (screen=="game" and session.is_story()))
 
 func _sync_selector() -> void:
 	if selector.item_count != session.catalog.size():
@@ -686,6 +733,7 @@ func _exit_tree() -> void:
 
 
 func _show_story() -> void:
+	_dismiss_restoration()
 	_clear_gesture()
 	if help_view != null:
 		help_view.hide()
@@ -706,6 +754,7 @@ func _select_story(ordinal: int) -> void:
 		_save_game()
 		if save_failed:
 			return
+	_dismiss_restoration()
 	var index := session.story_index(ordinal)
 	if index >= 0:
 		_select_puzzle(index)
@@ -741,3 +790,38 @@ func _retry_quality() -> void:
 	if quality_worker != null and not save_failed:
 		quality_worker.retry()
 	_update_status("")
+
+func _play_committed_sound(before: Puzzle, after: Puzzle) -> void:
+	if sound==null or before.puzzle_id!=after.puzzle_id or before.bridges==after.bridges:return
+	var removed:=false
+	for edge in before.bridges:
+		if int(after.bridges.get(edge,0))<int(before.bridges[edge]):removed=true;break
+	if removed:sound.play("remove");return
+	var island_complete:=false
+	for island in after.islands:
+		if island.get("variant","classic")!="mystery" and before.degree(str(island.id))!=int(island.target) and after.degree(str(island.id))==int(island.target):island_complete=true
+	sound.play("island" if island_complete else "bridge")
+
+func _present_restoration(before: int, after: int, epoch: int) -> void:
+	if is_queued_for_deletion() or epoch!=_restoration_epoch or _pending_restoration!=before:return
+	_pending_restoration=-1
+	if screen!="game" or generation_task!=null or save_failed or not session.is_story() or session.story_lost():return
+	_clear_gesture();_invalidate_generation();screen="restoration"
+	home.hide();game_view.hide();story_view.hide();help_view.hide()
+	restoration_view.present(before,after,art_preferences.motion)
+	_update_status("")
+
+func _dismiss_restoration() -> void:
+	_restoration_epoch+=1;_pending_restoration=-1
+	if restoration_view!=null:restoration_view.dismiss()
+
+func _continue_restoration() -> void:
+	if screen!="restoration" or save_failed or not session.quality.pending.is_empty():return
+	_open_game();_next_puzzle()
+
+func _change_sound(enabled: bool) -> void:
+	if art_preferences.save_sound(enabled):
+		sound.set_enabled(enabled)
+		if enabled:sound.play("tap")
+	sound_toggle.set_pressed_no_signal(art_preferences.sound)
+	if restoration_view!=null:restoration_view.set_sound_enabled(art_preferences.sound)

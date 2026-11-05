@@ -5,6 +5,12 @@ signal back_requested
 signal help_requested
 const Catalog=preload("res://scripts/hashi_story_catalog.gd")
 const Story=preload("res://scripts/hashi_story_state.gd")
+const Landscape=preload("res://scripts/hashi_landscape.gd")
+const Progress=preload("res://scripts/hashi_landscape_progress.gd")
+const Steps=preload("res://scripts/hashi_landscape_steps.gd")
+var landscape:Landscape
+var steps:Steps
+var motion_enabled:=true
 const Art=preload("res://scripts/hashi_art.gd")
 var scroll:ScrollContainer
 var content:VBoxContainer
@@ -23,12 +29,14 @@ func refresh(state:Dictionary,_completed_ids:Array) -> void:
 	level_buttons.clear()
 	var header:=HBoxContainer.new();content.add_child(header)
 	back_button=_button("",func():back_requested.emit(),header);Art.symbol(back_button,"back","Inicio")
-	var title:=Label.new();title.text="Historia";Art.heading(title,28);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL;title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;header.add_child(title)
+	var title:=Label.new();title.text="El faro";Art.heading(title,28);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL;title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER;header.add_child(title)
 	var help:=_button("",func():help_requested.emit(),header);Art.symbol(help,"menu","Ayuda de Historia")
+	landscape=Landscape.new();landscape.custom_minimum_size=Vector2(200,290);content.add_child(landscape);landscape.set_motion_enabled(motion_enabled);landscape.set_progress(Progress.progress(state))
+	steps=Steps.new();content.add_child(steps);steps.set_progress(Progress.progress(state))
 	message=Label.new();message.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;content.add_child(message)
 	var current:=int(state.frontier)
 	var follow_callback := func(): selected.emit(current)
-	follow_button=_button(level_code(current),follow_callback);follow_button.name="FollowStory";follow_button.icon=Art.ICONS.play;follow_button.add_theme_constant_override("icon_max_width",24);Art.primary(follow_button)
+	follow_button=_button(Progress.title(Progress.progress(state)),follow_callback);follow_button.tooltip_text="Jugar "+level_code(current);follow_button.name="FollowStory";follow_button.icon=Art.ICONS.play;follow_button.add_theme_constant_override("icon_max_width",24);Art.primary(follow_button)
 	for ordinal in Catalog.COUNT:
 		if ordinal % Catalog.STAGE_SIZE==0:
 			var stage:=Label.new();stage.text=str(ordinal/Catalog.STAGE_SIZE+1);Art.heading(stage,26);content.add_child(stage)

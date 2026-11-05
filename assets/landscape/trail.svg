@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="760" viewBox="0 0 800 760"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#eac7ad"/><stop offset="1" stop-color="#f6e9c9"/></linearGradient>
+ <linearGradient id="sea" x2=".2" y2="1"><stop stop-color="#9bbab5"/><stop offset="1" stop-color="#648f91"/></linearGradient>
+ <linearGradient id="rock" x2=".1" y2="1"><stop stop-color="#a8a487"/><stop offset="1" stop-color="#777f70"/></linearGradient>
+ <linearGradient id="grass" x2=".3" y2="1"><stop stop-color="#b7c490"/><stop offset="1" stop-color="#8fa67a"/></linearGradient>
+ <linearGradient id="wall" x2="1" y2=".2"><stop stop-color="#faf0d6"/><stop offset="1" stop-color="#d9cfb1"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#ffe7a1" stop-opacity=".72"/><stop offset="1" stop-color="#ffe7a1" stop-opacity="0"/></radialGradient>
+</defs><g stroke-linecap="round" stroke-linejoin="round"><path d="M187 501q54-65 139-54q102 13 148-30q48-34 111-16" fill="none" stroke="#d6c797" stroke-width="21"/><path d="M191 499q65-59 139-46q105 10 144-30q56-36 106-17" fill="none" stroke="#e4d8ae" stroke-width="6" stroke-dasharray="7 16"/></g></svg>
