@@ -38,3 +38,7 @@ Recorrido visual real con Godot 4.6.3, Xvfb y llvmpipe: treinta capturas a 360×
 Algunas pruebas headless que reproducen sonidos y terminan inmediatamente muestran avisos de recursos de reproducción WAV al apagar el motor. Los resultados funcionales son correctos; el recorrido renderizado con cierre normal no presenta esos avisos. No se introduce espera artificial ni se desactiva el sonido en producto para ocultarlos.
 
 No se afirma instalación, altavoz ni interacción física en Android. Se entregará un APK ARM64 con `org.hashi.prototype`, versionCode 9 y la firma persistente anterior, previa verificación criptográfica. Sin fusionar PRs ni publicar en tiendas. Jack solo juega; no se le delega comprobación técnica.
+
+## Candidatura Android revisada
+
+Fuente final: `c1a8c23459f521613d2d1d75741737c10d884525`. [CI fuente 41949409944](https://github.com/BenJackson66/Hashi-/actions/runs/41949409944) correcta: suite completa, 121 comprobaciones independientes y 55 comprobaciones de audio. La revisión visual del recorrido de treinta capturas resultó favorable. Este commit de candidatura solo modifica este informe; se compila un único candidato agrupado 0.9.0 / versionCode 9, manteniendo la identidad Android existente. Antes de entregarlo se verificarán firma, identidad histórica, hashes y recursos empaquetados.
