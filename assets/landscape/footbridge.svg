@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="760" viewBox="0 0 800 760"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#eac7ad"/><stop offset="1" stop-color="#f6e9c9"/></linearGradient>
+ <linearGradient id="sea" x2=".2" y2="1"><stop stop-color="#9bbab5"/><stop offset="1" stop-color="#648f91"/></linearGradient>
+ <linearGradient id="rock" x2=".1" y2="1"><stop stop-color="#a8a487"/><stop offset="1" stop-color="#777f70"/></linearGradient>
+ <linearGradient id="grass" x2=".3" y2="1"><stop stop-color="#b7c490"/><stop offset="1" stop-color="#8fa67a"/></linearGradient>
+ <linearGradient id="wall" x2="1" y2=".2"><stop stop-color="#faf0d6"/><stop offset="1" stop-color="#d9cfb1"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#ffe7a1" stop-opacity=".72"/><stop offset="1" stop-color="#ffe7a1" stop-opacity="0"/></radialGradient>
+</defs><g stroke-linecap="round" stroke-linejoin="round"><path d="M247 443l61-3 5 28-60 7Z" fill="#b99e70" stroke="#877557" stroke-width="3"/><path d="M257 446l2 24m11-25 2 23m10-24 2 23m10-24 2 22M249 443v-16m59 13v-16m-59 3 59-3" stroke="#e6cda0" stroke-width="4"/><path d="M476 403l35-21m8-3 32-4" stroke="#f0dbad" stroke-width="4"/><path d="M480 402v-17m29-2v-17m15 12v-16m25 12v-17" stroke="#e1c593" stroke-width="5"/></g></svg>

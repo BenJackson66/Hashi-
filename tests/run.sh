@@ -38,5 +38,7 @@ timeout 90s godot --headless --path . --script tests/cozy_domain_review.gd
 timeout 60s godot --headless --path . --script tests/cozy_touch_review.gd
 timeout 90s godot --headless --path . --script tests/cozy_ui_review.gd
 timeout 90s godot --headless --path . --script tests/cozy_backlog_review.gd
+timeout 120s godot --headless --path . --script tests/lighthouse_review.gd
+python3 tests/audio_assets.py
 python3 tests/signing_security.py
 

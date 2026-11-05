@@ -13,6 +13,13 @@ const BACKGROUND := Color("f1eddf")
 const BORDER := Color("cfd8c7")
 const PRIMARY := Color("4e705c")
 const ICONS := {
+	"boat": preload("res://assets/icons/boat.svg"),
+	"bridge": preload("res://assets/icons/bridge.svg"),
+	"house": preload("res://assets/icons/house.svg"),
+	"lighthouse": preload("res://assets/icons/lighthouse.svg"),
+	"sound": preload("res://assets/icons/sound.svg"),
+	"mute": preload("res://assets/icons/mute.svg"),
+
 	"back": preload("res://assets/icons/back.svg"),
 	"play": preload("res://assets/icons/play.svg"),
 	"menu": preload("res://assets/icons/menu.svg"),

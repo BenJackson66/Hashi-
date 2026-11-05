@@ -1,0 +1,5 @@
+Hashi cozy audio — original procedural sound design, 2026.
+Created specifically for this project with tools/create_cozy_audio.py.
+No external samples, recordings, voices or third-party music were used.
+These generated audio assets are dedicated to the public domain under CC0 1.0.
+https://creativecommons.org/publicdomain/zero/1.0/

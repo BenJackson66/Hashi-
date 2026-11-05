@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="760" viewBox="0 0 800 760"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#eac7ad"/><stop offset="1" stop-color="#f6e9c9"/></linearGradient>
+ <linearGradient id="sea" x2=".2" y2="1"><stop stop-color="#9bbab5"/><stop offset="1" stop-color="#648f91"/></linearGradient>
+ <linearGradient id="rock" x2=".1" y2="1"><stop stop-color="#a8a487"/><stop offset="1" stop-color="#777f70"/></linearGradient>
+ <linearGradient id="grass" x2=".3" y2="1"><stop stop-color="#b7c490"/><stop offset="1" stop-color="#8fa67a"/></linearGradient>
+ <linearGradient id="wall" x2="1" y2=".2"><stop stop-color="#faf0d6"/><stop offset="1" stop-color="#d9cfb1"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#ffe7a1" stop-opacity=".72"/><stop offset="1" stop-color="#ffe7a1" stop-opacity="0"/></radialGradient>
+</defs><g stroke-linecap="round" stroke-linejoin="round"><path d="M562 262l3-38h59l4 38Z" fill="#e5d5aa" stroke="#8c8770" stroke-width="3"/><path d="M570 230h46v27h-46Z" fill="#799c9a"/><path d="M584 229v29m18-29v29" stroke="#d8c89b" stroke-width="4"/><path d="M554 224l40-27 42 27Z" fill="#a76854" stroke="#876c58" stroke-width="3"/><path d="M594 198v-17" stroke="#826f59" stroke-width="3"/><path d="M583 184h22l-8-5" stroke="#826f59" stroke-width="3" fill="none"/><path d="M549 267v-15m14 17v-14m17 15v-15m18 16v-16m18 14v-15m18 12v-15M549 253l86-2" stroke="#657d73" stroke-width="3"/></g></svg>
